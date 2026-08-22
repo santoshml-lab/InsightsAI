@@ -1271,6 +1271,253 @@ function App() {
         );
       }
     )}
+    {/* AI EVIDENCE */}
+
+{analysis && (
+
+  <div
+    className="recent-card"
+    style={{
+      marginTop: "24px",
+    }}
+  >
+
+    <div className="card-header">
+
+      <div>
+        <h3>AI Evidence</h3>
+
+        <p>
+          Key findings backed by your dataset
+        </p>
+      </div>
+
+      <Brain size={20} />
+
+    </div>
+
+
+    <div
+      style={{
+        padding: "20px",
+        display: "grid",
+        gap: "14px",
+      }}
+    >
+
+      {/* STRONGEST CORRELATION */}
+
+      {analysis.correlations?.LoanApproved && (() => {
+
+        const correlations =
+          analysis.correlations.LoanApproved;
+
+        const strongest =
+          Object.entries(correlations)
+            .filter(
+              ([column]) =>
+                column !== "LoanApproved"
+            )
+            .sort(
+              ([, a], [, b]) =>
+                Math.abs(Number(b)) -
+                Math.abs(Number(a))
+            )[0];
+
+        if (!strongest) return null;
+
+        const [column, value] =
+          strongest;
+
+        return (
+
+          <div
+            style={{
+              padding: "16px",
+              borderRadius: "12px",
+              background:
+                "rgba(99,102,241,0.08)",
+              border:
+                "1px solid rgba(99,102,241,0.18)",
+            }}
+          >
+
+            <div
+              style={{
+                fontSize: "12px",
+                opacity: 0.7,
+                marginBottom: "6px",
+              }}
+            >
+              STRONGEST NUMERIC RELATIONSHIP
+            </div>
+
+            <strong
+              style={{
+                fontSize: "18px",
+              }}
+            >
+              {column}
+            </strong>
+
+            <div
+              style={{
+                marginTop: "6px",
+              }}
+            >
+              Correlation with{" "}
+              <strong>
+                LoanApproved
+              </strong>
+              :{" "}
+              <strong>
+                {Number(value).toFixed(4)}
+              </strong>
+            </div>
+
+          </div>
+
+        );
+
+      })()}
+
+
+      {/* MISSING DATA */}
+
+      {analysis.missing_values && (
+
+        <div
+          style={{
+            padding: "16px",
+            borderRadius: "12px",
+            background:
+              "rgba(245,158,11,0.08)",
+            border:
+              "1px solid rgba(245,158,11,0.18)",
+          }}
+        >
+
+          <div
+            style={{
+              fontSize: "12px",
+              opacity: 0.7,
+              marginBottom: "10px",
+            }}
+          >
+            MISSING DATA
+          </div>
+
+
+          {Object.entries(
+            analysis.missing_values
+          )
+            .filter(
+              ([, data]) =>
+                Number(data?.count) > 0
+            )
+            .map(
+              ([column, data]) => (
+
+                <div
+                  key={column}
+                  style={{
+                    display: "flex",
+                    justifyContent:
+                      "space-between",
+                    padding:
+                      "7px 0",
+                  }}
+                >
+
+                  <span>
+                    {column}
+                  </span>
+
+                  <strong>
+                    {data.count}{" "}
+                    ({data.percentage}%)
+                  </strong>
+
+                </div>
+
+              )
+            )}
+
+        </div>
+
+      )}
+
+
+      {/* OUTLIERS */}
+
+      {analysis.outliers && (
+
+        <div
+          style={{
+            padding: "16px",
+            borderRadius: "12px",
+            background:
+              "rgba(239,68,68,0.07)",
+            border:
+              "1px solid rgba(239,68,68,0.15)",
+          }}
+        >
+
+          <div
+            style={{
+              fontSize: "12px",
+              opacity: 0.7,
+              marginBottom: "10px",
+            }}
+          >
+            OUTLIER CHECK
+          </div>
+
+
+          {Object.entries(
+            analysis.outliers
+          )
+            .filter(
+              ([, data]) =>
+                Number(data?.count) > 0
+            )
+            .map(
+              ([column, data]) => (
+
+                <div
+                  key={column}
+                  style={{
+                    display: "flex",
+                    justifyContent:
+                      "space-between",
+                    padding:
+                      "7px 0",
+                  }}
+                >
+
+                  <span>
+                    {column}
+                  </span>
+
+                  <strong>
+                    {data.count}{" "}
+                    ({data.percentage}%)
+                  </strong>
+
+                </div>
+
+              )
+            )}
+
+        </div>
+
+      )}
+
+    </div>
+
+  </div>
+
+)}
 
   </div>
 
