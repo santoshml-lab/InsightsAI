@@ -597,6 +597,194 @@ function App() {
             )}
 
           </div>
+          {/* DATA QUALITY */}
+
+{analysis && (
+  <div
+    className="recent-card"
+    style={{ marginTop: "24px" }}
+  >
+    <div className="card-header">
+
+      <div>
+        <h3>Data Quality</h3>
+        <p>
+          Missing values detected in your dataset
+        </p>
+      </div>
+
+      <Lightbulb size={20} />
+
+    </div>
+
+    <div
+      style={{
+        padding: "20px",
+        display: "grid",
+        gap: "14px",
+      }}
+    >
+
+      {/* TOTAL MISSING */}
+
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          padding: "14px",
+          borderRadius: "10px",
+          background:
+            "rgba(255,255,255,0.04)",
+        }}
+      >
+
+        <strong>
+          Total Missing Values
+        </strong>
+
+        <span className="stat-change">
+          {Object.values(
+            analysis.missing_values || {}
+          ).reduce(
+            (total, value) =>
+              total + Number(value || 0),
+            0
+          )}
+        </span>
+
+      </div>
+
+
+      {/* MISSING VALUE COLUMNS */}
+
+      {Object.entries(
+        analysis.missing_values || {}
+      )
+        .filter(
+          ([, value]) =>
+            Number(value) > 0
+        )
+        .map(
+          ([column, value]) => {
+
+            const count =
+              Number(value);
+
+            const rows =
+              Number(
+                analysis.rows || 0
+              );
+
+            const percentage =
+              rows > 0
+                ? (
+                    (count / rows) *
+                    100
+                  ).toFixed(2)
+                : "0.00";
+
+            return (
+
+              <div
+                key={column}
+                style={{
+                  padding: "14px",
+                  borderRadius: "10px",
+                  background:
+                    "rgba(255,255,255,0.04)",
+                }}
+              >
+
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent:
+                      "space-between",
+                    marginBottom: "8px",
+                  }}
+                >
+
+                  <strong>
+                    {column}
+                  </strong>
+
+                  <span>
+                    {count} missing
+                  </span>
+
+                </div>
+
+
+                {/* PROGRESS BAR */}
+
+                <div
+                  style={{
+                    height: "7px",
+                    borderRadius: "10px",
+                    background:
+                      "rgba(255,255,255,0.08)",
+                    overflow: "hidden",
+                  }}
+                >
+
+                  <div
+                    style={{
+                      width: `${Math.min(
+                        Number(
+                          percentage
+                        ),
+                        100
+                      )}%`,
+                      height: "100%",
+                      background:
+                        "linear-gradient(90deg, #6366f1, #8b5cf6)",
+                      borderRadius: "10px",
+                    }}
+                  />
+
+                </div>
+
+                <small>
+                  {percentage}% of rows
+                </small>
+
+              </div>
+
+            );
+          }
+        )}
+
+
+      {/* NO MISSING VALUES */}
+
+      {Object.values(
+        analysis.missing_values || {}
+      ).every(
+        (value) =>
+          Number(value || 0) === 0
+      ) && (
+
+        <div
+          style={{
+            padding: "16px",
+            borderRadius: "10px",
+            background:
+              "rgba(34,197,94,0.08)",
+          }}
+        >
+
+          ✅ No missing values detected
+          in this dataset.
+
+        </div>
+
+      )}
+
+    </div>
+
+  </div>
+)}
 
 
           {/* DATASET OVERVIEW */}
