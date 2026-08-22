@@ -16,6 +16,69 @@ import { useRef, useState } from "react";
 const API_BASE =
   "https://insightsai-backend.onrender.com";
 
+function formatAIInsights(text) {
+  if (!text) return null;
+
+  const sections = [];
+  let currentSection = null;
+
+  const lines = text
+    .replace(/\r/g, "")
+    .split("\n");
+
+  lines.forEach((rawLine) => {
+    const line = rawLine.trim();
+
+    if (!line) return;
+
+    // Remove markdown symbols
+    const cleanLine = line
+      .replace(/^#{1,6}\s*/, "")
+      .replace(/^\*\*(.*?)\*\*$/, "$1")
+      .trim();
+
+    const lower = cleanLine.toLowerCase();
+
+    const isHeading =
+      lower.includes("key insights") ||
+      lower.includes("data quality") ||
+      lower.includes("important patterns") ||
+      lower.includes("business implications") ||
+      lower.includes("possible business implications") ||
+      lower.includes("recommended next steps");
+
+    if (isHeading) {
+      currentSection = {
+        title: cleanLine.replace(/:$/, ""),
+        items: [],
+      };
+
+      sections.push(currentSection);
+      return;
+    }
+
+    if (!currentSection) {
+      currentSection = {
+        title: "AI Analysis",
+        items: [],
+      };
+
+      sections.push(currentSection);
+    }
+
+    const cleanedItem = line
+      .replace(/^[-*•]\s*/, "")
+      .replace(/^\d+\.\s*/, "")
+      .trim();
+
+    if (cleanedItem) {
+      currentSection.items.push(cleanedItem);
+    }
+  });
+
+  return sections;
+}
+
 function App() {
   const [sidebarOpen, setSidebarOpen] =
     useState(true);
@@ -1077,37 +1140,157 @@ function App() {
                     )}
 
 
-                    {!loading &&
-                      insights && (
+                    {!loading && insights && (
 
-                        <div className="insight-item">
+  <div
+    style={{
+      padding: "20px",
+      display: "grid",
+      gap: "16px",
+    }}
+  >
 
-                          <div className="insight-number">
-                            AI
-                          </div>
+    {formatAIInsights(insights)?.map(
+      (section, index) => {
 
-                          <div>
+        const title =
+          section.title.toLowerCase();
 
-                            <strong>
-                              AI Analysis
-                            </strong>
+        const isQuality =
+          title.includes(
+            "quality"
+          );
 
-                            <p
-                              style={{
-                                whiteSpace:
-                                  "pre-wrap",
-                              }}
-                            >
-                              {
-                                insights
-                              }
-                            </p>
+        const isPattern =
+          title.includes(
+            "pattern"
+          );
 
-                          </div>
+        const isBusiness =
+          title.includes(
+            "business"
+          );
 
-                        </div>
+        const isRecommendation =
+          title.includes(
+            "recommended"
+          );
 
-                      )}
+        return (
+
+          <div
+            key={index}
+            style={{
+              padding: "18px",
+              borderRadius: "14px",
+              background:
+                "rgba(255,255,255,0.04)",
+              border:
+                "1px solid rgba(255,255,255,0.07)",
+            }}
+          >
+
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "10px",
+                marginBottom: "14px",
+              }}
+            >
+
+              <div
+                style={{
+                  fontSize: "20px",
+                }}
+              >
+                {isQuality
+                  ? "⚠️"
+                  : isPattern
+                  ? "🔍"
+                  : isBusiness
+                  ? "💼"
+                  : isRecommendation
+                  ? "🚀"
+                  : "✨"}
+              </div>
+
+              <strong
+                style={{
+                  fontSize: "15px",
+                }}
+              >
+                {section.title}
+              </strong>
+
+            </div>
+
+
+            <div
+              style={{
+                display: "grid",
+                gap: "10px",
+              }}
+            >
+
+              {section.items.map(
+                (item, itemIndex) => (
+
+                  <div
+                    key={itemIndex}
+                    style={{
+                      display: "flex",
+                      gap: "10px",
+                      lineHeight: "1.6",
+                    }}
+                  >
+
+                    <span
+                      style={{
+                        opacity: 0.7,
+                      }}
+                    >
+                      {isRecommendation
+                        ? `${itemIndex + 1}.`
+                        : "•"}
+                    </span>
+
+                    <span>
+                      {item}
+                    </span>
+
+                  </div>
+
+                )
+              )}
+
+            </div>
+
+          </div>
+
+        );
+      }
+    )}
+
+  </div>
+
+)}
+                      
+
+                            
+                                  
+                              
+                            
+                          
+                                
+                              
+                            
+
+                          
+
+                        
+
+                      
 
                     {!loading &&
                       !insights && (
