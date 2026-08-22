@@ -867,6 +867,153 @@ function App() {
                   </div>
 
                 </div>
+                {/* CORRELATION ANALYTICS */}
+
+<div
+  className="chart-card"
+  style={{
+    marginTop: "24px",
+  }}
+>
+  <div className="card-header">
+
+    <div>
+      <h3>Loan Approval Correlation</h3>
+
+      <p>
+        Relationship between numeric features
+        and LoanApproved
+      </p>
+    </div>
+
+    <BarChart3 size={20} />
+
+  </div>
+
+
+  <div
+    style={{
+      padding: "20px",
+      display: "grid",
+      gap: "16px",
+    }}
+  >
+
+    {analysis?.correlations?.LoanApproved
+      ? Object.entries(
+          analysis.correlations.LoanApproved
+        )
+          .filter(
+            ([column]) =>
+              column !== "LoanApproved"
+          )
+          .sort(
+            ([, a], [, b]) =>
+              Math.abs(Number(b)) -
+              Math.abs(Number(a))
+          )
+          .map(
+            ([column, value]) => {
+
+              const correlation =
+                Number(value);
+
+              const percentage =
+                Math.min(
+                  Math.abs(
+                    correlation
+                  ) * 100,
+                  100
+                );
+
+              return (
+
+                <div
+                  key={column}
+                  style={{
+                    display: "grid",
+                    gap: "8px",
+                  }}
+                >
+
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent:
+                        "space-between",
+                      alignItems:
+                        "center",
+                    }}
+                  >
+
+                    <strong>
+                      {column}
+                    </strong>
+
+                    <span>
+                      {correlation.toFixed(
+                        3
+                      )}
+                    </span>
+
+                  </div>
+
+
+                  <div
+                    style={{
+                      height: "8px",
+                      borderRadius:
+                        "10px",
+                      background:
+                        "rgba(255,255,255,0.08)",
+                      overflow:
+                        "hidden",
+                    }}
+                  >
+
+                    <div
+                      style={{
+                        width: `${percentage}%`,
+                        height: "100%",
+                        background:
+                          correlation >= 0
+                            ? "linear-gradient(90deg, #6366f1, #8b5cf6)"
+                            : "linear-gradient(90deg, #ef4444, #f97316)",
+                        borderRadius:
+                          "10px",
+                        transition:
+                          "width 0.5s ease",
+                      }}
+                    />
+
+                  </div>
+
+                  <small
+                    style={{
+                      opacity: 0.7,
+                    }}
+                  >
+                    {correlation > 0
+                      ? "Positive relationship"
+                      : correlation < 0
+                      ? "Negative relationship"
+                      : "No linear relationship"}
+                  </small>
+
+                </div>
+
+              );
+            }
+          )
+      : (
+        <p>
+          Correlation data is not available.
+        </p>
+      )}
+
+  </div>
+
+</div>
 
 
                 {/* AI INSIGHTS */}
