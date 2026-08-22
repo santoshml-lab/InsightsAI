@@ -8,88 +8,352 @@ import {
   Settings,
   Sparkles,
   Upload,
+  X,
 } from "lucide-react";
-import { useState } from "react";
+
+import { useRef, useState } from "react";
+
+const API_BASE =
+  "https://insightsai-backend.onrender.com";
 
 function App() {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] =
+    useState(true);
+
+  const [file, setFile] = useState(null);
+  const [analysis, setAnalysis] =
+    useState(null);
+
+  const [insights, setInsights] =
+    useState("");
+
+  const [loading, setLoading] =
+    useState(false);
+
+  const [error, setError] =
+    useState("");
+
+  const fileInputRef =
+    useRef(null);
+
+  // =====================================================
+  // STATS
+  // =====================================================
 
   const stats = [
     {
-      title: "Total Documents",
-      value: "24",
-      change: "+12%",
+      title: "Rows",
+      value:
+        analysis?.summary?.rows ??
+        "—",
+      change: analysis
+        ? "Analyzed"
+        : "Waiting",
       icon: FileText,
     },
+
     {
-      title: "AI Insights",
-      value: "186",
-      change: "+24%",
-      icon: Lightbulb,
-    },
-    {
-      title: "Analyses",
-      value: "342",
-      change: "+18%",
+      title: "Columns",
+      value:
+        analysis?.summary?.columns ??
+        "—",
+      change: analysis
+        ? "Detected"
+        : "Waiting",
       icon: BarChart3,
     },
+
     {
-      title: "AI Accuracy",
-      value: "94.8%",
-      change: "+3.2%",
+      title: "Missing Values",
+      value:
+        analysis?.summary
+          ?.total_missing_values ??
+        "—",
+      change: analysis
+        ? "Detected"
+        : "Waiting",
+      icon: Lightbulb,
+    },
+
+    {
+      title: "AI Insights",
+      value:
+        insights
+          ? "Ready"
+          : "—",
+      change:
+        insights
+          ? "Generated"
+          : "Waiting",
       icon: Brain,
     },
   ];
+
+  // =====================================================
+  // FILE SELECT
+  // =====================================================
+
+  const handleFileChange = async (event) => {
+    const selectedFile =
+      event.target.files?.[0];
+
+    if (!selectedFile) {
+      return;
+    }
+
+    if (
+      !selectedFile.name
+        .toLowerCase()
+        .endsWith(".csv")
+    ) {
+      setError(
+        "Please select a CSV file."
+      );
+
+      return;
+    }
+
+    setFile(selectedFile);
+    setAnalysis(null);
+    setInsights("");
+    setError("");
+
+    await analyzeDataset(
+      selectedFile
+    );
+  };
+
+  // =====================================================
+  // ANALYZE DATASET
+  // =====================================================
+
+  const analyzeDataset = async (
+    selectedFile
+  ) => {
+    try {
+      setLoading(true);
+      setError("");
+
+      const formData =
+        new FormData();
+
+      formData.append(
+        "file",
+        selectedFile
+      );
+
+      const response =
+        await fetch(
+          `${API_BASE}/analyze`,
+          {
+            method: "POST",
+            body: formData,
+          }
+        );
+
+      const data =
+        await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.detail ||
+            "Dataset analysis failed."
+        );
+      }
+
+      setAnalysis(data);
+
+      // Automatically generate AI insights
+      await generateInsights(
+        data
+      );
+    } catch (err) {
+      setError(
+        err.message ||
+          "Something went wrong."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // =====================================================
+  // GENERATE AI INSIGHTS
+  // =====================================================
+
+  const generateInsights = async (
+    analysisData
+  ) => {
+    try {
+      const response =
+        await fetch(
+          `${API_BASE}/insights`,
+          {
+            method: "POST",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+
+            body: JSON.stringify({
+              analysis:
+                analysisData,
+            }),
+          }
+        );
+
+      const data =
+        await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.detail ||
+            "AI insights generation failed."
+        );
+      }
+
+      setInsights(
+        data.insights || ""
+      );
+    } catch (err) {
+      throw new Error(
+        err.message ||
+          "Failed to generate AI insights."
+      );
+    }
+  };
+
+  // =====================================================
+  // UPLOAD BUTTON
+  // =====================================================
+
+  const openFilePicker = () => {
+    fileInputRef.current?.click();
+  };
+
+  // =====================================================
+  // CLEAR DATA
+  // =====================================================
+
+  const clearDataset = () => {
+    setFile(null);
+    setAnalysis(null);
+    setInsights("");
+    setError("");
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value =
+        "";
+    }
+  };
+
+  // =====================================================
+  // RENDER
+  // =====================================================
 
   return (
     <div className="app">
 
       {/* SIDEBAR */}
 
-      <aside className={`sidebar ${sidebarOpen ? "open" : "closed"}`}>
+      <aside
+        className={`sidebar ${
+          sidebarOpen
+            ? "open"
+            : "closed"
+        }`}
+      >
 
         <div className="logo">
+
           <div className="logo-icon">
             <Sparkles size={22} />
           </div>
 
           {sidebarOpen && (
             <div>
-              <h2>InsightsAI</h2>
-              <span>Intelligent Analytics</span>
+              <h2>
+                InsightsAI
+              </h2>
+
+              <span>
+                Intelligent Analytics
+              </span>
             </div>
           )}
+
         </div>
 
         <nav className="sidebar-nav">
 
-          <a className="nav-item active" href="#">
+          <a
+            className="nav-item active"
+            href="#"
+          >
             <Home size={19} />
-            {sidebarOpen && <span>Dashboard</span>}
+
+            {sidebarOpen && (
+              <span>
+                Dashboard
+              </span>
+            )}
           </a>
 
-          <a className="nav-item" href="#">
+          <a
+            className="nav-item"
+            href="#"
+          >
             <FileText size={19} />
-            {sidebarOpen && <span>Documents</span>}
+
+            {sidebarOpen && (
+              <span>
+                Documents
+              </span>
+            )}
           </a>
 
-          <a className="nav-item" href="#">
+          <a
+            className="nav-item"
+            href="#"
+          >
             <BarChart3 size={19} />
-            {sidebarOpen && <span>Analytics</span>}
+
+            {sidebarOpen && (
+              <span>
+                Analytics
+              </span>
+            )}
           </a>
 
-          <a className="nav-item" href="#">
+          <a
+            className="nav-item"
+            href="#"
+          >
             <Lightbulb size={19} />
-            {sidebarOpen && <span>AI Insights</span>}
+
+            {sidebarOpen && (
+              <span>
+                AI Insights
+              </span>
+            )}
           </a>
 
         </nav>
 
         <div className="sidebar-bottom">
 
-          <a className="nav-item" href="#">
+          <a
+            className="nav-item"
+            href="#"
+          >
             <Settings size={19} />
-            {sidebarOpen && <span>Settings</span>}
+
+            {sidebarOpen && (
+              <span>
+                Settings
+              </span>
+            )}
           </a>
 
         </div>
@@ -99,7 +363,13 @@ function App() {
 
       {/* MAIN */}
 
-      <main className={`main ${sidebarOpen ? "sidebar-open" : "sidebar-closed"}`}>
+      <main
+        className={`main ${
+          sidebarOpen
+            ? "sidebar-open"
+            : "sidebar-closed"
+        }`}
+      >
 
         {/* TOPBAR */}
 
@@ -107,21 +377,54 @@ function App() {
 
           <button
             className="menu-button"
-            onClick={() => setSidebarOpen(!sidebarOpen)}
+            onClick={() =>
+              setSidebarOpen(
+                !sidebarOpen
+              )
+            }
           >
             <Menu size={22} />
           </button>
 
           <div className="topbar-title">
-            <h1>Dashboard</h1>
-            <p>Welcome back to your AI analytics workspace.</p>
+
+            <h1>
+              Dashboard
+            </h1>
+
+            <p>
+              Welcome back to your AI
+              analytics workspace.
+            </p>
+
           </div>
 
           <div className="topbar-actions">
 
-            <button className="upload-button">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".csv"
+              onChange={
+                handleFileChange
+              }
+              style={{
+                display: "none",
+              }}
+            />
+
+            <button
+              className="upload-button"
+              onClick={
+                openFilePicker
+              }
+              disabled={loading}
+            >
               <Upload size={17} />
-              Upload Document
+
+              {loading
+                ? "Analyzing..."
+                : "Upload CSV"}
             </button>
 
             <div className="avatar">
@@ -142,6 +445,7 @@ function App() {
           <div className="hero">
 
             <div>
+
               <span className="hero-badge">
                 <Sparkles size={14} />
                 AI POWERED
@@ -149,260 +453,404 @@ function App() {
 
               <h2>
                 Turn your data into
-                <span> intelligent insights.</span>
+                <span>
+                  {" "}
+                  intelligent insights.
+                </span>
               </h2>
 
               <p>
-                Upload your documents, analyze your data,
-                and let AI uncover the insights that matter.
+                Upload your CSV, analyze
+                your data, and let AI
+                uncover the insights that
+                matter.
               </p>
+
             </div>
 
-            <button className="hero-button">
+            <button
+              className="hero-button"
+              onClick={
+                openFilePicker
+              }
+              disabled={loading}
+            >
               <Brain size={18} />
-              Generate AI Insight
+
+              {loading
+                ? "Analyzing..."
+                : "Analyze Dataset"}
             </button>
 
           </div>
+
+
+          {/* ERROR */}
+
+          {error && (
+
+            <div
+              className="evaluation-error"
+              style={{
+                marginTop: "20px",
+              }}
+            >
+              ⚠️ {error}
+            </div>
+
+          )}
+
+
+          {/* FILE */}
+
+          {file && (
+
+            <div
+              className="recent-card"
+              style={{
+                marginTop: "24px",
+              }}
+            >
+
+              <div className="card-header">
+
+                <div>
+
+                  <h3>
+                    Current Dataset
+                  </h3>
+
+                  <p>
+                    {file.name}
+                  </p>
+
+                </div>
+
+                <button
+                  className="view-button"
+                  onClick={
+                    clearDataset
+                  }
+                >
+                  <X size={16} />
+                  Clear
+                </button>
+
+              </div>
+
+            </div>
+
+          )}
 
 
           {/* STATS */}
 
           <div className="stats-grid">
 
-            {stats.map((stat) => {
+            {stats.map(
+              (stat) => {
 
-              const Icon = stat.icon;
+                const Icon =
+                  stat.icon;
 
-              return (
-                <div className="stat-card" key={stat.title}>
+                return (
 
-                  <div className="stat-top">
+                  <div
+                    className="stat-card"
+                    key={
+                      stat.title
+                    }
+                  >
 
-                    <div className="stat-icon">
-                      <Icon size={20} />
+                    <div className="stat-top">
+
+                      <div className="stat-icon">
+                        <Icon
+                          size={20}
+                        />
+                      </div>
+
+                      <span className="stat-change">
+                        {
+                          stat.change
+                        }
+                      </span>
+
                     </div>
 
-                    <span className="stat-change">
-                      {stat.change}
-                    </span>
+                    <div className="stat-value">
+                      {
+                        stat.value
+                      }
+                    </div>
+
+                    <div className="stat-title">
+                      {
+                        stat.title
+                      }
+                    </div>
 
                   </div>
 
-                  <div className="stat-value">
-                    {stat.value}
-                  </div>
-
-                  <div className="stat-title">
-                    {stat.title}
-                  </div>
-
-                </div>
-              );
-
-            })}
+                );
+              }
+            )}
 
           </div>
 
 
-          {/* ANALYTICS */}
+          {/* DATASET OVERVIEW */}
 
-          <div className="section-heading">
+          {analysis && (
 
-            <div>
-              <h2>Analytics Overview</h2>
-              <p>
-                Monitor your AI-powered analysis activity.
-              </p>
-            </div>
+            <>
 
-            <button className="period-button">
-              Last 30 days
-            </button>
-
-          </div>
-
-
-          <div className="analytics-grid">
-
-            <div className="chart-card">
-
-              <div className="card-header">
+              <div className="section-heading">
 
                 <div>
-                  <h3>Analysis Activity</h3>
-                  <p>Documents analyzed over time</p>
-                </div>
 
-                <BarChart3 size={20} />
+                  <h2>
+                    Dataset Overview
+                  </h2>
 
-              </div>
-
-              <div className="chart-placeholder">
-
-                <div className="chart-bars">
-
-                  {[45, 70, 55, 85, 65, 95, 75, 88, 62, 92, 78, 100].map(
-                    (height, index) => (
-                      <div
-                        className="chart-bar"
-                        style={{ height: `${height}%` }}
-                        key={index}
-                      />
-                    )
-                  )}
+                  <p>
+                    Automatically detected
+                    dataset structure.
+                  </p>
 
                 </div>
 
               </div>
 
-            </div>
 
+              <div className="analytics-grid">
 
-            {/* AI INSIGHTS */}
+                <div className="chart-card">
 
-            <div className="insights-card">
+                  <div className="card-header">
 
-              <div className="card-header">
+                    <div>
 
-                <div>
-                  <h3>Latest AI Insights</h3>
-                  <p>Generated from your data</p>
+                      <h3>
+                        Columns
+                      </h3>
+
+                      <p>
+                        Detected fields
+                      </p>
+
+                    </div>
+
+                    <BarChart3
+                      size={20}
+                    />
+
+                  </div>
+
+                  <div
+                    style={{
+                      padding:
+                        "20px",
+                    }}
+                  >
+
+                    {analysis.column_names?.map(
+                      (
+                        column
+                      ) => (
+
+                        <div
+                          key={
+                            column
+                          }
+                          style={{
+                            padding:
+                              "10px 0",
+                            borderBottom:
+                              "1px solid rgba(255,255,255,0.08)",
+                          }}
+                        >
+                          {column}
+                        </div>
+
+                      )
+                    )}
+
+                  </div>
+
                 </div>
 
-                <Sparkles size={20} />
+
+                {/* AI INSIGHTS */}
+
+                <div className="insights-card">
+
+                  <div className="card-header">
+
+                    <div>
+
+                      <h3>
+                        Latest AI Insights
+                      </h3>
+
+                      <p>
+                        Generated from your
+                        dataset
+                      </p>
+
+                    </div>
+
+                    <Sparkles
+                      size={20}
+                    />
+
+                  </div>
+
+                  <div
+                    className="insight-list"
+                    style={{
+                      padding:
+                        "20px",
+                    }}
+                  >
+
+                    {loading && (
+
+                      <div className="insight-item">
+
+                        <div className="insight-number">
+                          ✨
+                        </div>
+
+                        <div>
+
+                          <strong>
+                            AI is analyzing...
+                          </strong>
+
+                          <p>
+                            Finding patterns
+                            and generating
+                            insights from your
+                            dataset.
+                          </p>
+
+                        </div>
+
+                      </div>
+
+                    )}
+
+
+                    {!loading &&
+                      insights && (
+
+                        <div className="insight-item">
+
+                          <div className="insight-number">
+                            AI
+                          </div>
+
+                          <div>
+
+                            <strong>
+                              AI Analysis
+                            </strong>
+
+                            <p
+                              style={{
+                                whiteSpace:
+                                  "pre-wrap",
+                              }}
+                            >
+                              {
+                                insights
+                              }
+                            </p>
+
+                          </div>
+
+                        </div>
+
+                      )}
+
+                    {!loading &&
+                      !insights && (
+
+                        <div className="insight-item">
+
+                          <div className="insight-number">
+                            —
+                          </div>
+
+                          <div>
+
+                            <strong>
+                              No insights yet
+                            </strong>
+
+                            <p>
+                              Upload a CSV
+                              dataset to
+                              generate AI
+                              insights.
+                            </p>
+
+                          </div>
+
+                        </div>
+
+                      )}
+
+                  </div>
+
+                </div>
 
               </div>
 
-              <div className="insight-list">
+            </>
 
-                <div className="insight-item">
-
-                  <div className="insight-number">
-                    01
-                  </div>
-
-                  <div>
-                    <strong>
-                      Revenue growth detected
-                    </strong>
-
-                    <p>
-                      Your latest dataset shows
-                      a positive growth trend.
-                    </p>
-                  </div>
-
-                </div>
-
-
-                <div className="insight-item">
-
-                  <div className="insight-number">
-                    02
-                  </div>
-
-                  <div>
-                    <strong>
-                      Customer engagement improved
-                    </strong>
-
-                    <p>
-                      Engagement increased compared
-                      with the previous period.
-                    </p>
-                  </div>
-
-                </div>
-
-
-                <div className="insight-item">
-
-                  <div className="insight-number">
-                    03
-                  </div>
-
-                  <div>
-                    <strong>
-                      Potential optimization area
-                    </strong>
-
-                    <p>
-                      AI identified an opportunity
-                      for further analysis.
-                    </p>
-                  </div>
-
-                </div>
-
-              </div>
-
-            </div>
-
-          </div>
+          )}
 
 
           {/* RECENT DOCUMENTS */}
 
-          <div className="recent-card">
+          {!analysis && (
 
-            <div className="card-header">
+            <div className="recent-card">
 
-              <div>
-                <h3>Recent Documents</h3>
-                <p>Your latest uploaded files</p>
-              </div>
-
-              <button className="view-button">
-                View All
-              </button>
-
-            </div>
-
-            <div className="document-row">
-
-              <div className="document-info">
-
-                <div className="document-icon">
-                  <FileText size={19} />
-                </div>
+              <div className="card-header">
 
                 <div>
-                  <strong>Sales_Report.pdf</strong>
-                  <span>Analyzed recently</span>
+
+                  <h3>
+                    Get Started
+                  </h3>
+
+                  <p>
+                    Upload a CSV dataset
+                    to begin analysis.
+                  </p>
+
                 </div>
+
+                <button
+                  className="view-button"
+                  onClick={
+                    openFilePicker
+                  }
+                >
+                  <Upload
+                    size={16}
+                  />
+                  Upload CSV
+                </button>
 
               </div>
 
-              <span className="status">
-                Analyzed
-              </span>
-
             </div>
 
-
-            <div className="document-row">
-
-              <div className="document-info">
-
-                <div className="document-icon">
-                  <FileText size={19} />
-                </div>
-
-                <div>
-                  <strong>Business_Analysis.pdf</strong>
-                  <span>Analyzed recently</span>
-                </div>
-
-              </div>
-
-              <span className="status">
-                Analyzed
-              </span>
-
-            </div>
-
-          </div>
+          )}
 
         </section>
 
@@ -413,3 +861,7 @@ function App() {
 }
 
 export default App;
+
+
+
+
