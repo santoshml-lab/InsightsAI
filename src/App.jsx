@@ -678,28 +678,38 @@ AI-Powered Data Analytics
 
             <div>
 
-              <span className="hero-badge">
-                <div
+              <div
   style={{
     display: "flex",
     alignItems: "center",
-    gap: "10px",
+    gap: "12px",
+    flexWrap: "wrap",
   }}
 >
+  <span className="hero-badge">
+    <Sparkles size={14} />
+    AI POWERED
+  </span>
+
   {insights && (
     <button
       className="view-button"
       onClick={downloadReport}
+      type="button"
     >
       <Download size={16} />
       Download Report
     </button>
   )}
-
-  <Sparkles size={20} />
 </div>
-                AI POWERED
-              </span>
+                
+  
+  
+
+  
+
+                
+              
 
               <h2>
                 Turn your data into
