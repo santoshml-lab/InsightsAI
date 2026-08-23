@@ -16,6 +16,7 @@ import {
   
 
 import { useRef, useState } from "react";
+import jsPDF from "jspdf";
 
 const API_BASE =
   "https://insightsai-backend.onrender.com";
