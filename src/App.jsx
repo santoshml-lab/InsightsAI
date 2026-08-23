@@ -16,6 +16,10 @@ import { useRef, useState } from "react";
 const API_BASE =
   "https://insightsai-backend.onrender.com";
 
+// =====================================================
+// AI INSIGHTS FORMATTER
+// =====================================================
+
 function formatAIInsights(text) {
   if (!text) return null;
 
@@ -31,25 +35,29 @@ function formatAIInsights(text) {
 
     if (!line) return;
 
-    // Remove markdown symbols
     const cleanLine = line
       .replace(/^#{1,6}\s*/, "")
       .replace(/^\*\*(.*?)\*\*$/, "$1")
+      .replace(/^#+/, "")
+      .replace(/:$/, "")
       .trim();
 
     const lower = cleanLine.toLowerCase();
 
     const isHeading =
       lower.includes("key insights") ||
+      lower.includes("key findings") ||
       lower.includes("data quality") ||
       lower.includes("important patterns") ||
+      lower.includes("patterns") ||
       lower.includes("business implications") ||
       lower.includes("possible business implications") ||
-      lower.includes("recommended next steps");
+      lower.includes("recommended next steps") ||
+      lower.includes("next steps");
 
     if (isHeading) {
       currentSection = {
-        title: cleanLine.replace(/:$/, ""),
+        title: cleanLine,
         items: [],
       };
 
@@ -69,6 +77,7 @@ function formatAIInsights(text) {
     const cleanedItem = line
       .replace(/^[-*•]\s*/, "")
       .replace(/^\d+\.\s*/, "")
+      .replace(/^>\s*/, "")
       .trim();
 
     if (cleanedItem) {
@@ -79,11 +88,17 @@ function formatAIInsights(text) {
   return sections;
 }
 
+// =====================================================
+// APP
+// =====================================================
+
 function App() {
   const [sidebarOpen, setSidebarOpen] =
     useState(true);
 
-  const [file, setFile] = useState(null);
+  const [file, setFile] =
+    useState(null);
+
   const [analysis, setAnalysis] =
     useState(null);
 
@@ -156,7 +171,9 @@ function App() {
   // FILE SELECT
   // =====================================================
 
-  const handleFileChange = async (event) => {
+  const handleFileChange = async (
+    event
+  ) => {
     const selectedFile =
       event.target.files?.[0];
 
@@ -312,13 +329,62 @@ function App() {
   };
 
   // =====================================================
+  // MISSING VALUES HELPERS
+  // =====================================================
+
+  const getMissingCount = (
+    value
+  ) => {
+    if (
+      value &&
+      typeof value === "object"
+    ) {
+      return Number(
+        value.count || 0
+      );
+    }
+
+    return Number(value || 0);
+  };
+
+  const getMissingPercentage = (
+    value
+  ) => {
+    if (
+      value &&
+      typeof value === "object"
+    ) {
+      return Number(
+        value.percentage || 0
+      );
+    }
+
+    const rows =
+      Number(
+        analysis?.summary?.rows || 0
+      );
+
+    const count =
+      Number(value || 0);
+
+    if (!rows) return 0;
+
+    return (
+      (count / rows) *
+      100
+    );
+  };
+
+  // =====================================================
   // RENDER
   // =====================================================
 
   return (
     <div className="app">
 
-      {/* SIDEBAR */}
+      {/* =================================================
+          SIDEBAR
+      ================================================= */}
 
       <aside
         className={`sidebar ${
@@ -423,8 +489,9 @@ function App() {
 
       </aside>
 
-
-      {/* MAIN */}
+      {/* =================================================
+          MAIN
+      ================================================= */}
 
       <main
         className={`main ${
@@ -434,7 +501,9 @@ function App() {
         }`}
       >
 
-        {/* TOPBAR */}
+        {/* =================================================
+            TOPBAR
+        ================================================= */}
 
         <header className="topbar">
 
@@ -498,12 +567,15 @@ function App() {
 
         </header>
 
-
-        {/* CONTENT */}
+        {/* =================================================
+            CONTENT
+        ================================================= */}
 
         <section className="dashboard">
 
-          {/* HERO */}
+          {/* =================================================
+              HERO
+          ================================================= */}
 
           <div className="hero">
 
@@ -547,8 +619,9 @@ function App() {
 
           </div>
 
-
-          {/* ERROR */}
+          {/* =================================================
+              ERROR
+          ================================================= */}
 
           {error && (
 
@@ -563,8 +636,9 @@ function App() {
 
           )}
 
-
-          {/* FILE */}
+          {/* =================================================
+              CURRENT FILE
+          ================================================= */}
 
           {file && (
 
@@ -605,8 +679,9 @@ function App() {
 
           )}
 
-
-          {/* STATS */}
+          {/* =================================================
+              STATS
+          ================================================= */}
 
           <div className="stats-grid">
 
@@ -660,197 +735,243 @@ function App() {
             )}
 
           </div>
-          {/* DATA QUALITY */}
 
-{analysis && (
-  <div
-    className="recent-card"
-    style={{ marginTop: "24px" }}
-  >
-    <div className="card-header">
+          {/* =================================================
+              DATA QUALITY
+          ================================================= */}
 
-      <div>
-        <h3>Data Quality</h3>
-        <p>
-          Missing values detected in your dataset
-        </p>
-      </div>
+          {analysis && (
 
-      <Lightbulb size={20} />
+            <div
+              className="recent-card"
+              style={{
+                marginTop: "24px",
+              }}
+            >
 
-    </div>
+              <div className="card-header">
 
-    <div
-      style={{
-        padding: "20px",
-        display: "grid",
-        gap: "14px",
-      }}
-    >
+                <div>
 
-      {/* TOTAL MISSING */}
+                  <h3>
+                    Data Quality
+                  </h3>
 
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          padding: "14px",
-          borderRadius: "10px",
-          background:
-            "rgba(255,255,255,0.04)",
-        }}
-      >
+                  <p>
+                    Missing values detected
+                    in your dataset
+                  </p>
 
-        <strong>
-          Total Missing Values
-        </strong>
+                </div>
 
-        <span className="stat-change">
-          {Object.values(
-            analysis.missing_values || {}
-          ).reduce(
-            (total, value) =>
-              total + Number(value || 0),
-            0
-          )}
-        </span>
+                <Lightbulb size={20} />
 
-      </div>
-
-
-      {/* MISSING VALUE COLUMNS */}
-
-      {Object.entries(
-        analysis.missing_values || {}
-      )
-        .filter(
-          ([, value]) =>
-            Number(value) > 0
-        )
-        .map(
-          ([column, value]) => {
-
-            const count =
-              Number(value);
-
-            const rows =
-              Number(
-                analysis.rows || 0
-              );
-
-            const percentage =
-              rows > 0
-                ? (
-                    (count / rows) *
-                    100
-                  ).toFixed(2)
-                : "0.00";
-
-            return (
+              </div>
 
               <div
-                key={column}
                 style={{
-                  padding: "14px",
-                  borderRadius: "10px",
-                  background:
-                    "rgba(255,255,255,0.04)",
+                  padding: "20px",
+                  display: "grid",
+                  gap: "14px",
                 }}
               >
+
+                {/* TOTAL MISSING */}
 
                 <div
                   style={{
                     display: "flex",
                     justifyContent:
                       "space-between",
-                    marginBottom: "8px",
+                    alignItems:
+                      "center",
+                    padding: "14px",
+                    borderRadius: "10px",
+                    background:
+                      "rgba(255,255,255,0.04)",
                   }}
                 >
 
                   <strong>
-                    {column}
+                    Total Missing Values
                   </strong>
 
-                  <span>
-                    {count} missing
+                  <span className="stat-change">
+                    {
+                      Object.values(
+                        analysis.missing_values ||
+                          {}
+                      ).reduce(
+                        (
+                          total,
+                          value
+                        ) =>
+                          total +
+                          getMissingCount(
+                            value
+                          ),
+                        0
+                      )
+                    }
                   </span>
 
                 </div>
 
+                {/* MISSING VALUE COLUMNS */}
 
-                {/* PROGRESS BAR */}
+                {Object.entries(
+                  analysis.missing_values ||
+                    {}
+                )
+                  .filter(
+                    ([, value]) =>
+                      getMissingCount(
+                        value
+                      ) > 0
+                  )
+                  .map(
+                    (
+                      [
+                        column,
+                        value,
+                      ]
+                    ) => {
 
-                <div
-                  style={{
-                    height: "7px",
-                    borderRadius: "10px",
-                    background:
-                      "rgba(255,255,255,0.08)",
-                    overflow: "hidden",
-                  }}
-                >
+                      const count =
+                        getMissingCount(
+                          value
+                        );
+
+                      const percentage =
+                        getMissingPercentage(
+                          value
+                        );
+
+                      return (
+
+                        <div
+                          key={
+                            column
+                          }
+                          style={{
+                            padding:
+                              "14px",
+                            borderRadius:
+                              "10px",
+                            background:
+                              "rgba(255,255,255,0.04)",
+                          }}
+                        >
+
+                          <div
+                            style={{
+                              display:
+                                "flex",
+                              justifyContent:
+                                "space-between",
+                              marginBottom:
+                                "8px",
+                            }}
+                          >
+
+                            <strong>
+                              {
+                                column
+                              }
+                            </strong>
+
+                            <span>
+                              {
+                                count
+                              }{" "}
+                              missing
+                            </span>
+
+                          </div>
+
+                          {/* PROGRESS BAR */}
+
+                          <div
+                            style={{
+                              height:
+                                "7px",
+                              borderRadius:
+                                "10px",
+                              background:
+                                "rgba(255,255,255,0.08)",
+                              overflow:
+                                "hidden",
+                            }}
+                          >
+
+                            <div
+                              style={{
+                                width: `${Math.min(
+                                  percentage,
+                                  100
+                                )}%`,
+                                height:
+                                  "100%",
+                                background:
+                                  "linear-gradient(90deg, #6366f1, #8b5cf6)",
+                                borderRadius:
+                                  "10px",
+                              }}
+                            />
+
+                          </div>
+
+                          <small>
+                            {percentage.toFixed(
+                              2
+                            )}
+                            % of rows
+                          </small>
+
+                        </div>
+
+                      );
+                    }
+                  )}
+
+                {/* NO MISSING VALUES */}
+
+                {Object.values(
+                  analysis.missing_values ||
+                    {}
+                ).every(
+                  (value) =>
+                    getMissingCount(
+                      value
+                    ) === 0
+                ) && (
 
                   <div
                     style={{
-                      width: `${Math.min(
-                        Number(
-                          percentage
-                        ),
-                        100
-                      )}%`,
-                      height: "100%",
+                      padding:
+                        "16px",
+                      borderRadius:
+                        "10px",
                       background:
-                        "linear-gradient(90deg, #6366f1, #8b5cf6)",
-                      borderRadius: "10px",
+                        "rgba(34,197,94,0.08)",
                     }}
-                  />
+                  >
+                    ✅ No missing values
+                    detected in this
+                    dataset.
+                  </div>
 
-                </div>
-
-                <small>
-                  {percentage}% of rows
-                </small>
+                )}
 
               </div>
 
-            );
-          }
-        )}
+            </div>
 
+          )}
 
-      {/* NO MISSING VALUES */}
-
-      {Object.values(
-        analysis.missing_values || {}
-      ).every(
-        (value) =>
-          Number(value || 0) === 0
-      ) && (
-
-        <div
-          style={{
-            padding: "16px",
-            borderRadius: "10px",
-            background:
-              "rgba(34,197,94,0.08)",
-          }}
-        >
-
-          ✅ No missing values detected
-          in this dataset.
-
-        </div>
-
-      )}
-
-    </div>
-
-  </div>
-)}
-
-
-          {/* DATASET OVERVIEW */}
+          {/* =================================================
+              DATASET OVERVIEW
+          ================================================= */}
 
           {analysis && (
 
@@ -873,8 +994,11 @@ function App() {
 
               </div>
 
-
               <div className="analytics-grid">
+
+                {/* =================================================
+                    COLUMNS
+                ================================================= */}
 
                 <div className="chart-card">
 
@@ -905,7 +1029,7 @@ function App() {
                     }}
                   >
 
-                    {analysis.column_names?.map(
+                    {analysis.columns?.map(
                       (
                         column
                       ) => (
@@ -930,156 +1054,207 @@ function App() {
                   </div>
 
                 </div>
-                {/* CORRELATION ANALYTICS */}
 
-<div
-  className="chart-card"
-  style={{
-    marginTop: "24px",
-  }}
->
-  <div className="card-header">
-
-    <div>
-      <h3>Loan Approval Correlation</h3>
-
-      <p>
-        Relationship between numeric features
-        and LoanApproved
-      </p>
-    </div>
-
-    <BarChart3 size={20} />
-
-  </div>
-
-
-  <div
-    style={{
-      padding: "20px",
-      display: "grid",
-      gap: "16px",
-    }}
-  >
-
-    {analysis?.correlations?.LoanApproved
-      ? Object.entries(
-          analysis.correlations.LoanApproved
-        )
-          .filter(
-            ([column]) =>
-              column !== "LoanApproved"
-          )
-          .sort(
-            ([, a], [, b]) =>
-              Math.abs(Number(b)) -
-              Math.abs(Number(a))
-          )
-          .map(
-            ([column, value]) => {
-
-              const correlation =
-                Number(value);
-
-              const percentage =
-                Math.min(
-                  Math.abs(
-                    correlation
-                  ) * 100,
-                  100
-                );
-
-              return (
+                {/* =================================================
+                    CORRELATION ANALYTICS
+                ================================================= */}
 
                 <div
-                  key={column}
+                  className="chart-card"
                   style={{
-                    display: "grid",
-                    gap: "8px",
+                    marginTop: "24px",
                   }}
                 >
 
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent:
-                        "space-between",
-                      alignItems:
-                        "center",
-                    }}
-                  >
+                  <div className="card-header">
 
-                    <strong>
-                      {column}
-                    </strong>
+                    <div>
 
-                    <span>
-                      {correlation.toFixed(
-                        3
-                      )}
-                    </span>
+                      <h3>
+                        Loan Approval
+                        Correlation
+                      </h3>
 
-                  </div>
+                      <p>
+                        Relationship between
+                        numeric features and
+                        LoanApproved
+                      </p>
 
+                    </div>
 
-                  <div
-                    style={{
-                      height: "8px",
-                      borderRadius:
-                        "10px",
-                      background:
-                        "rgba(255,255,255,0.08)",
-                      overflow:
-                        "hidden",
-                    }}
-                  >
-
-                    <div
-                      style={{
-                        width: `${percentage}%`,
-                        height: "100%",
-                        background:
-                          correlation >= 0
-                            ? "linear-gradient(90deg, #6366f1, #8b5cf6)"
-                            : "linear-gradient(90deg, #ef4444, #f97316)",
-                        borderRadius:
-                          "10px",
-                        transition:
-                          "width 0.5s ease",
-                      }}
+                    <BarChart3
+                      size={20}
                     />
 
                   </div>
 
-                  <small
+                  <div
                     style={{
-                      opacity: 0.7,
+                      padding: "20px",
+                      display: "grid",
+                      gap: "16px",
                     }}
                   >
-                    {correlation > 0
-                      ? "Positive relationship"
-                      : correlation < 0
-                      ? "Negative relationship"
-                      : "No linear relationship"}
-                  </small>
+
+                    {analysis
+                      ?.correlations
+                      ?.LoanApproved
+                      ? Object.entries(
+                          analysis
+                            .correlations
+                            .LoanApproved
+                        )
+                          .filter(
+                            ([column]) =>
+                              column !==
+                              "LoanApproved"
+                          )
+                          .sort(
+                            (
+                              [, a],
+                              [, b]
+                            ) =>
+                              Math.abs(
+                                Number(
+                                  b
+                                )
+                              ) -
+                              Math.abs(
+                                Number(
+                                  a
+                                )
+                              )
+                          )
+                          .map(
+                            (
+                              [
+                                column,
+                                value,
+                              ]
+                            ) => {
+
+                              const correlation =
+                                Number(
+                                  value
+                                );
+
+                              const percentage =
+                                Math.min(
+                                  Math.abs(
+                                    correlation
+                                  ) *
+                                    100,
+                                  100
+                                );
+
+                              return (
+
+                                <div
+                                  key={
+                                    column
+                                  }
+                                  style={{
+                                    display:
+                                      "grid",
+                                    gap:
+                                      "8px",
+                                  }}
+                                >
+
+                                  <div
+                                    style={{
+                                      display:
+                                        "flex",
+                                      justifyContent:
+                                        "space-between",
+                                      alignItems:
+                                        "center",
+                                    }}
+                                  >
+
+                                    <strong>
+                                      {
+                                        column
+                                      }
+                                    </strong>
+
+                                    <span>
+                                      {correlation.toFixed(
+                                        3
+                                      )}
+                                    </span>
+
+                                  </div>
+
+                                  <div
+                                    style={{
+                                      height:
+                                        "8px",
+                                      borderRadius:
+                                        "10px",
+                                      background:
+                                        "rgba(255,255,255,0.08)",
+                                      overflow:
+                                        "hidden",
+                                    }}
+                                  >
+
+                                    <div
+                                      style={{
+                                        width: `${percentage}%`,
+                                        height:
+                                          "100%",
+                                        background:
+                                          correlation >=
+                                          0
+                                            ? "linear-gradient(90deg, #6366f1, #8b5cf6)"
+                                            : "linear-gradient(90deg, #ef4444, #f97316)",
+                                        borderRadius:
+                                          "10px",
+                                        transition:
+                                          "width 0.5s ease",
+                                      }}
+                                    />
+
+                                  </div>
+
+                                  <small
+                                    style={{
+                                      opacity:
+                                        0.7,
+                                    }}
+                                  >
+                                    {correlation >
+                                    0
+                                      ? "Positive relationship"
+                                      : correlation <
+                                        0
+                                      ? "Negative relationship"
+                                      : "No linear relationship"}
+                                  </small>
+
+                                </div>
+
+                              );
+                            }
+                          )
+                      : (
+
+                        <p>
+                          Correlation data is
+                          not available.
+                        </p>
+
+                      )}
+
+                  </div>
 
                 </div>
 
-              );
-            }
-          )
-      : (
-        <p>
-          Correlation data is not available.
-        </p>
-      )}
-
-  </div>
-
-</div>
-
-
-                {/* AI INSIGHTS */}
+                {/* =================================================
+                    AI INSIGHTS
+                ================================================= */}
 
                 <div className="insights-card">
 
@@ -1112,6 +1287,8 @@ function App() {
                     }}
                   >
 
+                    {/* LOADING */}
+
                     {loading && (
 
                       <div className="insight-item">
@@ -1139,405 +1316,189 @@ function App() {
 
                     )}
 
-
-                    {!loading && insights && (
-
-  <div
-    style={{
-      padding: "20px",
-      display: "grid",
-      gap: "16px",
-    }}
-  >
-
-    {formatAIInsights(insights)?.map(
-      (section, index) => {
-
-        const title =
-          section.title.toLowerCase();
-
-        const isQuality =
-          title.includes(
-            "quality"
-          );
-
-        const isPattern =
-          title.includes(
-            "pattern"
-          );
-
-        const isBusiness =
-          title.includes(
-            "business"
-          );
-
-        const isRecommendation =
-          title.includes(
-            "recommended"
-          );
-
-        return (
-
-          <div
-            key={index}
-            style={{
-              padding: "18px",
-              borderRadius: "14px",
-              background:
-                "rgba(255,255,255,0.04)",
-              border:
-                "1px solid rgba(255,255,255,0.07)",
-            }}
-          >
-
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "10px",
-                marginBottom: "14px",
-              }}
-            >
-
-              <div
-                style={{
-                  fontSize: "20px",
-                }}
-              >
-                {isQuality
-                  ? "⚠️"
-                  : isPattern
-                  ? "🔍"
-                  : isBusiness
-                  ? "💼"
-                  : isRecommendation
-                  ? "🚀"
-                  : "✨"}
-              </div>
-
-              <strong
-                style={{
-                  fontSize: "15px",
-                }}
-              >
-                {section.title}
-              </strong>
-
-            </div>
-
-
-            <div
-              style={{
-                display: "grid",
-                gap: "10px",
-              }}
-            >
-
-              {section.items.map(
-                (item, itemIndex) => (
-
-                  <div
-                    key={itemIndex}
-                    style={{
-                      display: "flex",
-                      gap: "10px",
-                      lineHeight: "1.6",
-                    }}
-                  >
-
-                    <span
-                      style={{
-                        opacity: 0.7,
-                      }}
-                    >
-                      {isRecommendation
-                        ? `${itemIndex + 1}.`
-                        : "•"}
-                    </span>
-
-                    <span>
-                      {item}
-                    </span>
-
-                  </div>
-
-                )
-              )}
-
-            </div>
-
-          </div>
-
-        );
-      }
-    )}
-    {/* AI EVIDENCE */}
-
-{analysis && (
-
-  <div
-    className="recent-card"
-    style={{
-      marginTop: "24px",
-    }}
-  >
-
-    <div className="card-header">
-
-      <div>
-        <h3>AI Evidence</h3>
-
-        <p>
-          Key findings backed by your dataset
-        </p>
-      </div>
-
-      <Brain size={20} />
-
-    </div>
-
-
-    <div
-      style={{
-        padding: "20px",
-        display: "grid",
-        gap: "14px",
-      }}
-    >
-
-      {/* STRONGEST CORRELATION */}
-
-      {analysis.correlations?.LoanApproved && (() => {
-
-        const correlations =
-          analysis.correlations.LoanApproved;
-
-        const strongest =
-          Object.entries(correlations)
-            .filter(
-              ([column]) =>
-                column !== "LoanApproved"
-            )
-            .sort(
-              ([, a], [, b]) =>
-                Math.abs(Number(b)) -
-                Math.abs(Number(a))
-            )[0];
-
-        if (!strongest) return null;
-
-        const [column, value] =
-          strongest;
-
-        return (
-
-          <div
-            style={{
-              padding: "16px",
-              borderRadius: "12px",
-              background:
-                "rgba(99,102,241,0.08)",
-              border:
-                "1px solid rgba(99,102,241,0.18)",
-            }}
-          >
-
-            <div
-              style={{
-                fontSize: "12px",
-                opacity: 0.7,
-                marginBottom: "6px",
-              }}
-            >
-              STRONGEST NUMERIC RELATIONSHIP
-            </div>
-
-            <strong
-              style={{
-                fontSize: "18px",
-              }}
-            >
-              {column}
-            </strong>
-
-            <div
-              style={{
-                marginTop: "6px",
-              }}
-            >
-              Correlation with{" "}
-              <strong>
-                LoanApproved
-              </strong>
-              :{" "}
-              <strong>
-                {Number(value).toFixed(4)}
-              </strong>
-            </div>
-
-          </div>
-
-        );
-
-      })()}
-
-
-      {/* MISSING DATA */}
-
-      {analysis.missing_values && (
-
-        <div
-          style={{
-            padding: "16px",
-            borderRadius: "12px",
-            background:
-              "rgba(245,158,11,0.08)",
-            border:
-              "1px solid rgba(245,158,11,0.18)",
-          }}
-        >
-
-          <div
-            style={{
-              fontSize: "12px",
-              opacity: 0.7,
-              marginBottom: "10px",
-            }}
-          >
-            MISSING DATA
-          </div>
-
-
-          {Object.entries(
-            analysis.missing_values
-          )
-            .filter(
-              ([, data]) =>
-                Number(data?.count) > 0
-            )
-            .map(
-              ([column, data]) => (
-
-                <div
-                  key={column}
-                  style={{
-                    display: "flex",
-                    justifyContent:
-                      "space-between",
-                    padding:
-                      "7px 0",
-                  }}
-                >
-
-                  <span>
-                    {column}
-                  </span>
-
-                  <strong>
-                    {data.count}{" "}
-                    ({data.percentage}%)
-                  </strong>
-
-                </div>
-
-              )
-            )}
-
-        </div>
-
-      )}
-
-
-      {/* OUTLIERS */}
-
-      {analysis.outliers && (
-
-        <div
-          style={{
-            padding: "16px",
-            borderRadius: "12px",
-            background:
-              "rgba(239,68,68,0.07)",
-            border:
-              "1px solid rgba(239,68,68,0.15)",
-          }}
-        >
-
-          <div
-            style={{
-              fontSize: "12px",
-              opacity: 0.7,
-              marginBottom: "10px",
-            }}
-          >
-            OUTLIER CHECK
-          </div>
-
-
-          {Object.entries(
-            analysis.outliers
-          )
-            .filter(
-              ([, data]) =>
-                Number(data?.count) > 0
-            )
-            .map(
-              ([column, data]) => (
-
-                <div
-                  key={column}
-                  style={{
-                    display: "flex",
-                    justifyContent:
-                      "space-between",
-                    padding:
-                      "7px 0",
-                  }}
-                >
-
-                  <span>
-                    {column}
-                  </span>
-
-                  <strong>
-                    {data.count}{" "}
-                    ({data.percentage}%)
-                  </strong>
-
-                </div>
-
-              )
-            )}
-
-        </div>
-
-      )}
-
-    </div>
-
-  </div>
-
-)}
-
-  </div>
-
-)}
-                      
-
-                            
-                                  
-                              
-                            
-                          
-                                
-                              
-                            
-
-                          
-
-                        
-
-                      
+                    {/* AI RESULTS */}
+
+                    {!loading &&
+                      insights && (
+
+                        <div
+                          style={{
+                            display:
+                              "grid",
+                            gap:
+                              "16px",
+                          }}
+                        >
+
+                          {formatAIInsights(
+                            insights
+                          )?.map(
+                            (
+                              section,
+                              index
+                            ) => {
+
+                              const title =
+                                section.title.toLowerCase();
+
+                              const isQuality =
+                                title.includes(
+                                  "quality"
+                                );
+
+                              const isPattern =
+                                title.includes(
+                                  "pattern"
+                                );
+
+                              const isBusiness =
+                                title.includes(
+                                  "business"
+                                );
+
+                              const isRecommendation =
+                                title.includes(
+                                  "recommended"
+                                ) ||
+                                title.includes(
+                                  "next step"
+                                );
+
+                              const isFinding =
+                                title.includes(
+                                  "finding"
+                                ) ||
+                                title.includes(
+                                  "insight"
+                                );
+
+                              return (
+
+                                <div
+                                  key={
+                                    index
+                                  }
+                                  style={{
+                                    padding:
+                                      "18px",
+                                    borderRadius:
+                                      "14px",
+                                    background:
+                                      "rgba(255,255,255,0.04)",
+                                    border:
+                                      "1px solid rgba(255,255,255,0.07)",
+                                  }}
+                                >
+
+                                  <div
+                                    style={{
+                                      display:
+                                        "flex",
+                                      alignItems:
+                                        "center",
+                                      gap:
+                                        "10px",
+                                      marginBottom:
+                                        "14px",
+                                    }}
+                                  >
+
+                                    <div
+                                      style={{
+                                        fontSize:
+                                          "20px",
+                                      }}
+                                    >
+                                      {isQuality
+                                        ? "⚠️"
+                                        : isPattern
+                                        ? "🔍"
+                                        : isBusiness
+                                        ? "💼"
+                                        : isRecommendation
+                                        ? "🚀"
+                                        : isFinding
+                                        ? "💡"
+                                        : "✨"}
+                                    </div>
+
+                                    <strong
+                                      style={{
+                                        fontSize:
+                                          "15px",
+                                      }}
+                                    >
+                                      {
+                                        section.title
+                                      }
+                                    </strong>
+
+                                  </div>
+
+                                  <div
+                                    style={{
+                                      display:
+                                        "grid",
+                                      gap:
+                                        "10px",
+                                    }}
+                                  >
+
+                                    {section.items.map(
+                                      (
+                                        item,
+                                        itemIndex
+                                      ) => (
+
+                                        <div
+                                          key={
+                                            itemIndex
+                                          }
+                                          style={{
+                                            display:
+                                              "flex",
+                                            gap:
+                                              "10px",
+                                            lineHeight:
+                                              "1.6",
+                                          }}
+                                        >
+
+                                          <span
+                                            style={{
+                                              opacity:
+                                                0.7,
+                                            }}
+                                          >
+                                            {isRecommendation
+                                              ? `${itemIndex + 1}.`
+                                              : "•"}
+                                          </span>
+
+                                          <span>
+                                            {
+                                              item
+                                            }
+                                          </span>
+
+                                        </div>
+
+                                      )
+                                    )}
+
+                                  </div>
+
+                                </div>
+
+                              );
+                            }
+                          )}
+
+                        </div>
+
+                      )}
+
+                    {/* NO INSIGHTS */}
 
                     {!loading &&
                       !insights && (
@@ -1573,12 +1534,470 @@ function App() {
 
               </div>
 
+              {/* =================================================
+                  AI EVIDENCE
+              ================================================= */}
+
+              <div
+                className="recent-card"
+                style={{
+                  marginTop: "24px",
+                }}
+              >
+
+                <div className="card-header">
+
+                  <div>
+
+                    <h3>
+                      AI Evidence
+                    </h3>
+
+                    <p>
+                      Key findings backed
+                      by your dataset
+                    </p>
+
+                  </div>
+
+                  <Brain size={20} />
+
+                </div>
+
+                <div
+                  style={{
+                    padding: "20px",
+                    display: "grid",
+                    gap: "14px",
+                  }}
+                >
+
+                  {/* =================================================
+                      STRONGEST CORRELATION
+                  ================================================= */}
+
+                  {analysis
+                    .correlations
+                    ?.LoanApproved &&
+                    (() => {
+
+                      const correlations =
+                        analysis
+                          .correlations
+                          .LoanApproved;
+
+                      const strongest =
+                        Object.entries(
+                          correlations
+                        )
+                          .filter(
+                            ([column]) =>
+                              column !==
+                              "LoanApproved"
+                          )
+                          .sort(
+                            (
+                              [, a],
+                              [, b]
+                            ) =>
+                              Math.abs(
+                                Number(
+                                  b
+                                )
+                              ) -
+                              Math.abs(
+                                Number(
+                                  a
+                                )
+                              )
+                          )[0];
+
+                      if (
+                        !strongest
+                      )
+                        return null;
+
+                      const [
+                        column,
+                        value,
+                      ] =
+                        strongest;
+
+                      return (
+
+                        <div
+                          style={{
+                            padding:
+                              "16px",
+                            borderRadius:
+                              "12px",
+                            background:
+                              "rgba(99,102,241,0.08)",
+                            border:
+                              "1px solid rgba(99,102,241,0.18)",
+                          }}
+                        >
+
+                          <div
+                            style={{
+                              fontSize:
+                                "12px",
+                              opacity:
+                                0.7,
+                              marginBottom:
+                                "6px",
+                            }}
+                          >
+                            STRONGEST NUMERIC
+                            RELATIONSHIP
+                          </div>
+
+                          <strong
+                            style={{
+                              fontSize:
+                                "18px",
+                            }}
+                          >
+                            {
+                              column
+                            }
+                          </strong>
+
+                          <div
+                            style={{
+                              marginTop:
+                                "6px",
+                            }}
+                          >
+                            Correlation with{" "}
+                            <strong>
+                              LoanApproved
+                            </strong>
+                            :{" "}
+                            <strong>
+                              {Number(
+                                value
+                              ).toFixed(
+                                4
+                              )}
+                            </strong>
+                          </div>
+
+                        </div>
+
+                      );
+
+                    })()}
+
+                  {/* =================================================
+                      MISSING DATA
+                  ================================================= */}
+
+                  {analysis.missing_values && (
+
+                    <div
+                      style={{
+                        padding:
+                          "16px",
+                        borderRadius:
+                          "12px",
+                        background:
+                          "rgba(245,158,11,0.08)",
+                        border:
+                          "1px solid rgba(245,158,11,0.18)",
+                      }}
+                    >
+
+                      <div
+                        style={{
+                          fontSize:
+                            "12px",
+                          opacity:
+                            0.7,
+                          marginBottom:
+                            "10px",
+                        }}
+                      >
+                        MISSING DATA
+                      </div>
+
+                      {Object.entries(
+                        analysis
+                          .missing_values
+                      )
+                        .filter(
+                          ([, data]) =>
+                            getMissingCount(
+                              data
+                            ) > 0
+                        )
+                        .map(
+                          (
+                            [
+                              column,
+                              data,
+                            ]
+                          ) => (
+
+                            <div
+                              key={
+                                column
+                              }
+                              style={{
+                                display:
+                                  "flex",
+                                justifyContent:
+                                  "space-between",
+                                padding:
+                                  "7px 0",
+                              }}
+                            >
+
+                              <span>
+                                {
+                                  column
+                                }
+                              </span>
+
+                              <strong>
+                                {
+                                  getMissingCount(
+                                    data
+                                  )
+                                }{" "}
+                                (
+                                {getMissingPercentage(
+                                  data
+                                ).toFixed(
+                                  2
+                                )}
+                                %)
+                              </strong>
+
+                            </div>
+
+                          )
+                        )}
+
+                    </div>
+
+                  )}
+
+                  {/* =================================================
+                      OUTLIERS
+                  ================================================= */}
+
+                  {analysis.outliers && (
+
+                    <div
+                      style={{
+                        padding:
+                          "16px",
+                        borderRadius:
+                          "12px",
+                        background:
+                          "rgba(239,68,68,0.07)",
+                        border:
+                          "1px solid rgba(239,68,68,0.15)",
+                      }}
+                    >
+
+                      <div
+                        style={{
+                          fontSize:
+                            "12px",
+                          opacity:
+                            0.7,
+                          marginBottom:
+                            "10px",
+                        }}
+                      >
+                        OUTLIER CHECK
+                      </div>
+
+                      {Object.entries(
+                        analysis
+                          .outliers
+                      )
+                        .filter(
+                          ([, data]) =>
+                            Number(
+                              data?.count
+                            ) > 0
+                        )
+                        .map(
+                          (
+                            [
+                              column,
+                              data,
+                            ]
+                          ) => (
+
+                            <div
+                              key={
+                                column
+                              }
+                              style={{
+                                display:
+                                  "flex",
+                                justifyContent:
+                                  "space-between",
+                                padding:
+                                  "7px 0",
+                              }}
+                            >
+
+                              <span>
+                                {
+                                  column
+                                }
+                              </span>
+
+                              <strong>
+                                {
+                                  data.count
+                                }{" "}
+                                (
+                                {
+                                  data.percentage
+                                }
+                                %)
+                              </strong>
+
+                            </div>
+
+                          )
+                        )}
+
+                      {Object.values(
+                        analysis.outliers
+                      ).every(
+                        (data) =>
+                          Number(
+                            data?.count
+                          ) === 0
+                      ) && (
+
+                        <div>
+                          No outliers
+                          detected.
+                        </div>
+
+                      )}
+
+                    </div>
+
+                  )}
+
+                  {/* =================================================
+                      SUSPICIOUS VALUES
+                  ================================================= */}
+
+                  {analysis.numeric_statistics && (
+
+                    <div
+                      style={{
+                        padding:
+                          "16px",
+                        borderRadius:
+                          "12px",
+                        background:
+                          "rgba(239,68,68,0.06)",
+                        border:
+                          "1px solid rgba(239,68,68,0.12)",
+                      }}
+                    >
+
+                      <div
+                        style={{
+                          fontSize:
+                            "12px",
+                          opacity:
+                            0.7,
+                          marginBottom:
+                            "10px",
+                        }}
+                      >
+                        DATA VALIDATION
+                      </div>
+
+                      {[
+                        "Income",
+                        "LoanAmount",
+                      ].map(
+                        (column) => {
+
+                          const stats =
+                            analysis
+                              .numeric_statistics
+                              ?.[
+                                column
+                              ];
+
+                          if (
+                            !stats
+                          )
+                            return null;
+
+                          if (
+                            Number(
+                              stats.minimum
+                            ) >= 0
+                          )
+                            return null;
+
+                          return (
+
+                            <div
+                              key={
+                                column
+                              }
+                              style={{
+                                display:
+                                  "flex",
+                                justifyContent:
+                                  "space-between",
+                                padding:
+                                  "7px 0",
+                              }}
+                            >
+
+                              <span>
+                                ⚠️ Negative{" "}
+                                {
+                                  column
+                                }
+                              </span>
+
+                              <strong>
+                                Minimum:{" "}
+                                {
+                                  stats.minimum
+                                }
+                              </strong>
+
+                            </div>
+
+                          );
+
+                        }
+                      )}
+
+                    </div>
+
+                  )}
+
+                </div>
+
+              </div>
+
             </>
 
           )}
 
-
-          {/* RECENT DOCUMENTS */}
+          {/* =================================================
+              GET STARTED
+          ================================================= */}
 
           {!analysis && (
 
