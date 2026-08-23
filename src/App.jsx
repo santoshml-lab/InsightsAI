@@ -118,7 +118,7 @@ function App() {
   const fileInputRef =
     useRef(null);
   const downloadReport = () => {
-  if (!analysis || !insights) return;
+  if (!analysis) return;
 
   const report = `
 INSIGHTSAI — AI DATA ANALYSIS REPORT
