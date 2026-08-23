@@ -691,16 +691,24 @@ AI-Powered Data Analytics
     AI POWERED
   </span>
 
-  {insights && (
-    <button
-      className="view-button"
-      onClick={downloadReport}
-      type="button"
-    >
-      <Download size={16} />
-      Download Report
-    </button>
-  )}
+  {analysis && (
+  <button
+    className="view-button"
+    onClick={downloadReport}
+    type="button"
+  >
+    <Download size={16} />
+    Download Report
+  </button>
+)}
+    
+      
+      
+      
+    
+      
+    
+  
 </div>
                 
   
