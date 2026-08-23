@@ -11,9 +11,6 @@ import {
   X,
   Download,
 } from "lucide-react";
-  
-  
-  
 
 import { useRef, useState } from "react";
 import jsPDF from "jspdf";
@@ -118,99 +115,512 @@ function App() {
 
   const fileInputRef =
     useRef(null);
+
+  // =====================================================
+  // DOWNLOAD PDF REPORT
+  // =====================================================
+
   const downloadReport = () => {
-  if (!analysis) return;
+    if (!analysis) return;
 
-  const report = `
-INSIGHTSAI — AI DATA ANALYSIS REPORT
-====================================
+    const doc = new jsPDF();
 
-Dataset: ${file?.name || "Unknown"}
+    const pageWidth =
+      doc.internal.pageSize.getWidth();
 
-DATASET SUMMARY
----------------
-Rows: ${analysis.summary?.rows ?? "N/A"}
-Columns: ${analysis.summary?.columns ?? "N/A"}
-Total Missing Values: ${analysis.summary?.total_missing_values ?? "N/A"}
-Duplicate Rows: ${analysis.summary?.duplicate_rows ?? "N/A"}
+    const pageHeight =
+      doc.internal.pageSize.getHeight();
 
-AI INSIGHTS
------------
+    let y = 20;
 
-${insights}
+    const addText = (
+      text,
+      x = 20,
+      fontSize = 11,
+      maxWidth = pageWidth - 40
+    ) => {
+      doc.setFontSize(fontSize);
 
-AI EVIDENCE
------------
+      const lines =
+        doc.splitTextToSize(
+          String(text),
+          maxWidth
+        );
 
-Strongest Numeric Relationship:
-${
-  analysis.correlations?.LoanApproved
-    ? Object.entries(
-        analysis.correlations.LoanApproved
-      )
-        .filter(
-          ([column]) => column !== "LoanApproved"
+      if (
+        y + lines.length * 7 >
+        pageHeight - 20
+      ) {
+        doc.addPage();
+        y = 20;
+      }
+
+      doc.text(
+        lines,
+        x,
+        y
+      );
+
+      y +=
+        lines.length * 7 + 3;
+    };
+
+    // =====================================================
+    // TITLE
+    // =====================================================
+
+    doc.setFont(
+      "helvetica",
+      "bold"
+    );
+
+    addText(
+      "InsightsAI",
+      20,
+      22
+    );
+
+    doc.setFont(
+      "helvetica",
+      "normal"
+    );
+
+    addText(
+      "AI-Powered Data Analysis Report",
+      20,
+      12
+    );
+
+    y += 5;
+
+    // =====================================================
+    // DATASET
+    // =====================================================
+
+    doc.setFont(
+      "helvetica",
+      "bold"
+    );
+
+    addText(
+      "DATASET",
+      20,
+      14
+    );
+
+    doc.setFont(
+      "helvetica",
+      "normal"
+    );
+
+    addText(
+      file?.name ||
+        "Unknown",
+      20,
+      11
+    );
+
+    y += 5;
+
+    // =====================================================
+    // DATASET SUMMARY
+    // =====================================================
+
+    doc.setFont(
+      "helvetica",
+      "bold"
+    );
+
+    addText(
+      "DATASET SUMMARY",
+      20,
+      14
+    );
+
+    doc.setFont(
+      "helvetica",
+      "normal"
+    );
+
+    addText(
+      `Rows: ${
+        analysis.summary?.rows ??
+        "N/A"
+      }`,
+      20,
+      11
+    );
+
+    addText(
+      `Columns: ${
+        analysis.summary?.columns ??
+        "N/A"
+      }`,
+      20,
+      11
+    );
+
+    addText(
+      `Total Missing Values: ${
+        analysis.summary
+          ?.total_missing_values ??
+        "N/A"
+      }`,
+      20,
+      11
+    );
+
+    addText(
+      `Duplicate Rows: ${
+        analysis.summary
+          ?.duplicate_rows ??
+        "N/A"
+      }`,
+      20,
+      11
+    );
+
+    y += 5;
+
+    // =====================================================
+    // AI INSIGHTS
+    // =====================================================
+
+    doc.setFont(
+      "helvetica",
+      "bold"
+    );
+
+    addText(
+      "AI INSIGHTS",
+      20,
+      14
+    );
+
+    doc.setFont(
+      "helvetica",
+      "normal"
+    );
+
+    if (insights) {
+      const formattedInsights =
+        formatAIInsights(
+          insights
+        );
+
+      formattedInsights?.forEach(
+        (section) => {
+          doc.setFont(
+            "helvetica",
+            "bold"
+          );
+
+          addText(
+            section.title,
+            20,
+            12
+          );
+
+          doc.setFont(
+            "helvetica",
+            "normal"
+          );
+
+          section.items.forEach(
+            (item) => {
+              addText(
+                `• ${item}`,
+                25,
+                10
+              );
+            }
+          );
+
+          y += 2;
+        }
+      );
+    } else {
+      addText(
+        "No AI insights available.",
+        20,
+        11
+      );
+    }
+
+    y += 5;
+
+    // =====================================================
+    // AI EVIDENCE
+    // =====================================================
+
+    doc.setFont(
+      "helvetica",
+      "bold"
+    );
+
+    addText(
+      "AI EVIDENCE",
+      20,
+      14
+    );
+
+    doc.setFont(
+      "helvetica",
+      "normal"
+    );
+
+    if (
+      analysis.correlations
+        ?.LoanApproved
+    ) {
+      const strongest =
+        Object.entries(
+          analysis
+            .correlations
+            .LoanApproved
         )
-        .sort(
-          ([, a], [, b]) =>
-            Math.abs(Number(b)) -
-            Math.abs(Number(a))
-        )[0]
-        ?.join(" : ") || "N/A"
-    : "N/A"
-}
+          .filter(
+            ([column]) =>
+              column !==
+              "LoanApproved"
+          )
+          .sort(
+            ([, a], [, b]) =>
+              Math.abs(
+                Number(b)
+              ) -
+              Math.abs(
+                Number(a)
+              )
+          )[0];
 
-OUTLIERS
---------
+      if (strongest) {
+        const [
+          column,
+          value,
+        ] = strongest;
 
-${
-  analysis.outliers
-    ? Object.entries(analysis.outliers)
-        .filter(
+        addText(
+          `Strongest Numeric Relationship: ${column}`,
+          20,
+          11
+        );
+
+        addText(
+          `Correlation with LoanApproved: ${Number(
+            value
+          ).toFixed(4)}`,
+          20,
+          11
+        );
+      }
+    }
+
+    y += 5;
+
+    // =====================================================
+    // MISSING DATA
+    // =====================================================
+
+    doc.setFont(
+      "helvetica",
+      "bold"
+    );
+
+    addText(
+      "MISSING DATA",
+      20,
+      14
+    );
+
+    doc.setFont(
+      "helvetica",
+      "normal"
+    );
+
+    if (
+      analysis.missing_values
+    ) {
+      const missingColumns =
+        Object.entries(
+          analysis
+            .missing_values
+        ).filter(
           ([, data]) =>
-            Number(data?.count) > 0
-        )
-        .map(
-          ([column, data]) =>
-            `${column}: ${data.count} (${data.percentage}%)`
-        )
-        .join("\n")
-    : "None detected"
-}
+            getMissingCount(
+              data
+            ) > 0
+        );
 
-====================================
-Generated by InsightsAI
-AI-Powered Data Analytics
-`;
+      if (
+        missingColumns.length ===
+        0
+      ) {
+        addText(
+          "No missing values detected.",
+          20,
+          10
+        );
+      } else {
+        missingColumns.forEach(
+          ([column, data]) => {
+            addText(
+              `${column}: ${getMissingCount(
+                data
+              )} missing (${getMissingPercentage(
+                data
+              ).toFixed(2)}%)`,
+              20,
+              10
+            );
+          }
+        );
+      }
+    }
 
-  const blob = new Blob(
-    [report],
-    { type: "text/plain" }
-  );
+    y += 5;
 
-  const url =
-    URL.createObjectURL(blob);
+    // =====================================================
+    // OUTLIERS
+    // =====================================================
 
-  const link =
-    document.createElement("a");
+    doc.setFont(
+      "helvetica",
+      "bold"
+    );
 
-  link.href = url;
+    addText(
+      "OUTLIER CHECK",
+      20,
+      14
+    );
 
-  link.download =
-    `${file?.name?.replace(
-      /\.csv$/i,
-      ""
-    ) || "dataset"}_InsightsAI_Report.txt`;
+    doc.setFont(
+      "helvetica",
+      "normal"
+    );
 
-  document.body.appendChild(link);
+    if (
+      analysis.outliers
+    ) {
+      const outliers =
+        Object.entries(
+          analysis.outliers
+        ).filter(
+          ([, data]) =>
+            Number(
+              data?.count
+            ) > 0
+        );
 
-  link.click();
+      if (
+        outliers.length ===
+        0
+      ) {
+        addText(
+          "No outliers detected.",
+          20,
+          10
+        );
+      } else {
+        outliers.forEach(
+          ([column, data]) => {
+            addText(
+              `${column}: ${data.count} (${data.percentage}%)`,
+              20,
+              10
+            );
+          }
+        );
+      }
+    }
 
-  document.body.removeChild(link);
+    y += 5;
 
-  URL.revokeObjectURL(url);
-};
-  
+    // =====================================================
+    // DATA VALIDATION
+    // =====================================================
+
+    if (
+      analysis.numeric_statistics
+    ) {
+      doc.setFont(
+        "helvetica",
+        "bold"
+      );
+
+      addText(
+        "DATA VALIDATION",
+        20,
+        14
+      );
+
+      doc.setFont(
+        "helvetica",
+        "normal"
+      );
+
+      [
+        "Income",
+        "LoanAmount",
+      ].forEach(
+        (column) => {
+          const stats =
+            analysis
+              .numeric_statistics
+              ?.[column];
+
+          if (!stats) return;
+
+          if (
+            Number(
+              stats.minimum
+            ) >= 0
+          ) {
+            return;
+          }
+
+          addText(
+            `Negative ${column} detected. Minimum: ${stats.minimum}`,
+            20,
+            10
+          );
+        }
+      );
+    }
+
+    y += 8;
+
+    // =====================================================
+    // FOOTER
+    // =====================================================
+
+    doc.setFont(
+      "helvetica",
+      "italic"
+    );
+
+    addText(
+      "Generated by InsightsAI — AI-Powered Data Analytics",
+      20,
+      9
+    );
+
+    // =====================================================
+    // SAVE PDF
+    // =====================================================
+
+    const filename =
+      `${
+        file?.name?.replace(
+          /\.csv$/i,
+          ""
+        ) ||
+        "dataset"
+      }_InsightsAI_Report.pdf`;
+
+    doc.save(filename);
+  };
 
   // =====================================================
   // STATS
@@ -220,37 +630,37 @@ AI-Powered Data Analytics
     {
       title: "Rows",
       value:
-        analysis?.summary?.rows ??
-        "—",
-      change: analysis
-        ? "Analyzed"
-        : "Waiting",
+        analysis?.summary
+          ?.rows ?? "—",
+      change:
+        analysis
+          ? "Analyzed"
+          : "Waiting",
       icon: FileText,
     },
-
     {
       title: "Columns",
       value:
-        analysis?.summary?.columns ??
-        "—",
-      change: analysis
-        ? "Detected"
-        : "Waiting",
+        analysis?.summary
+          ?.columns ?? "—",
+      change:
+        analysis
+          ? "Detected"
+          : "Waiting",
       icon: BarChart3,
     },
-
     {
       title: "Missing Values",
       value:
         analysis?.summary
           ?.total_missing_values ??
         "—",
-      change: analysis
-        ? "Detected"
-        : "Waiting",
+      change:
+        analysis
+          ? "Detected"
+          : "Waiting",
       icon: Lightbulb,
     },
-
     {
       title: "AI Insights",
       value:
@@ -269,209 +679,220 @@ AI-Powered Data Analytics
   // FILE SELECT
   // =====================================================
 
-  const handleFileChange = async (
-    event
-  ) => {
-    const selectedFile =
-      event.target.files?.[0];
+  const handleFileChange =
+    async (event) => {
+      const selectedFile =
+        event.target.files?.[0];
 
-    if (!selectedFile) {
-      return;
-    }
+      if (!selectedFile) {
+        return;
+      }
 
-    if (
-      !selectedFile.name
-        .toLowerCase()
-        .endsWith(".csv")
-    ) {
-      setError(
-        "Please select a CSV file."
+      if (
+        !selectedFile.name
+          .toLowerCase()
+          .endsWith(".csv")
+      ) {
+        setError(
+          "Please select a CSV file."
+        );
+
+        return;
+      }
+
+      setFile(
+        selectedFile
       );
 
-      return;
-    }
+      setAnalysis(null);
+      setInsights("");
+      setError("");
 
-    setFile(selectedFile);
-    setAnalysis(null);
-    setInsights("");
-    setError("");
-
-    await analyzeDataset(
-      selectedFile
-    );
-  };
+      await analyzeDataset(
+        selectedFile
+      );
+    };
 
   // =====================================================
   // ANALYZE DATASET
   // =====================================================
 
-  const analyzeDataset = async (
-    selectedFile
-  ) => {
-    try {
-      setLoading(true);
-      setError("");
+  const analyzeDataset =
+    async (
+      selectedFile
+    ) => {
+      try {
+        setLoading(true);
+        setError("");
 
-      const formData =
-        new FormData();
+        const formData =
+          new FormData();
 
-      formData.append(
-        "file",
-        selectedFile
-      );
-
-      const response =
-        await fetch(
-          `${API_BASE}/analyze`,
-          {
-            method: "POST",
-            body: formData,
-          }
+        formData.append(
+          "file",
+          selectedFile
         );
 
-      const data =
-        await response.json();
+        const response =
+          await fetch(
+            `${API_BASE}/analyze`,
+            {
+              method: "POST",
+              body: formData,
+            }
+          );
 
-      if (!response.ok) {
-        throw new Error(
-          data.detail ||
-            "Dataset analysis failed."
+        const data =
+          await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            data.detail ||
+              "Dataset analysis failed."
+          );
+        }
+
+        setAnalysis(data);
+
+        await generateInsights(
+          data
         );
+      } catch (err) {
+        setError(
+          err.message ||
+            "Something went wrong."
+        );
+      } finally {
+        setLoading(false);
       }
-
-      setAnalysis(data);
-
-      // Automatically generate AI insights
-      await generateInsights(
-        data
-      );
-    } catch (err) {
-      setError(
-        err.message ||
-          "Something went wrong."
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
 
   // =====================================================
   // GENERATE AI INSIGHTS
   // =====================================================
 
-  const generateInsights = async (
-    analysisData
-  ) => {
-    try {
-      const response =
-        await fetch(
-          `${API_BASE}/insights`,
-          {
-            method: "POST",
+  const generateInsights =
+    async (
+      analysisData
+    ) => {
+      try {
+        const response =
+          await fetch(
+            `${API_BASE}/insights`,
+            {
+              method: "POST",
 
-            headers: {
-              "Content-Type":
-                "application/json",
-            },
+              headers: {
+                "Content-Type":
+                  "application/json",
+              },
 
-            body: JSON.stringify({
-              analysis:
-                analysisData,
-            }),
-          }
+              body: JSON.stringify({
+                analysis:
+                  analysisData,
+              }),
+            }
+          );
+
+        const data =
+          await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            data.detail ||
+              "AI insights generation failed."
+          );
+        }
+
+        setInsights(
+          data.insights || ""
         );
-
-      const data =
-        await response.json();
-
-      if (!response.ok) {
+      } catch (err) {
         throw new Error(
-          data.detail ||
-            "AI insights generation failed."
+          err.message ||
+            "Failed to generate AI insights."
         );
       }
-
-      setInsights(
-        data.insights || ""
-      );
-    } catch (err) {
-      throw new Error(
-        err.message ||
-          "Failed to generate AI insights."
-      );
-    }
-  };
+    };
 
   // =====================================================
   // UPLOAD BUTTON
   // =====================================================
 
-  const openFilePicker = () => {
-    fileInputRef.current?.click();
-  };
+  const openFilePicker =
+    () => {
+      fileInputRef.current?.click();
+    };
 
   // =====================================================
   // CLEAR DATA
   // =====================================================
 
-  const clearDataset = () => {
-    setFile(null);
-    setAnalysis(null);
-    setInsights("");
-    setError("");
+  const clearDataset =
+    () => {
+      setFile(null);
+      setAnalysis(null);
+      setInsights("");
+      setError("");
 
-    if (fileInputRef.current) {
-      fileInputRef.current.value =
-        "";
-    }
-  };
+      if (
+        fileInputRef.current
+      ) {
+        fileInputRef.current.value =
+          "";
+      }
+    };
 
   // =====================================================
   // MISSING VALUES HELPERS
   // =====================================================
 
-  const getMissingCount = (
-    value
-  ) => {
-    if (
-      value &&
-      typeof value === "object"
-    ) {
+  const getMissingCount =
+    (value) => {
+      if (
+        value &&
+        typeof value ===
+          "object"
+      ) {
+        return Number(
+          value.count || 0
+        );
+      }
+
       return Number(
-        value.count || 0
+        value || 0
       );
-    }
+    };
 
-    return Number(value || 0);
-  };
+  const getMissingPercentage =
+    (value) => {
+      if (
+        value &&
+        typeof value ===
+          "object"
+      ) {
+        return Number(
+          value.percentage ||
+            0
+        );
+      }
 
-  const getMissingPercentage = (
-    value
-  ) => {
-    if (
-      value &&
-      typeof value === "object"
-    ) {
-      return Number(
-        value.percentage || 0
+      const rows =
+        Number(
+          analysis?.summary
+            ?.rows || 0
+        );
+
+      const count =
+        Number(value || 0);
+
+      if (!rows) return 0;
+
+      return (
+        (count / rows) *
+        100
       );
-    }
-
-    const rows =
-      Number(
-        analysis?.summary?.rows || 0
-      );
-
-    const count =
-      Number(value || 0);
-
-    if (!rows) return 0;
-
-    return (
-      (count / rows) *
-      100
-    );
-  };
+    };
 
   // =====================================================
   // RENDER
@@ -480,9 +901,7 @@ AI-Powered Data Analytics
   return (
     <div className="app">
 
-      {/* =================================================
-          SIDEBAR
-      ================================================= */}
+      {/* SIDEBAR */}
 
       <aside
         className={`sidebar ${
@@ -491,11 +910,12 @@ AI-Powered Data Analytics
             : "closed"
         }`}
       >
-
         <div className="logo">
 
           <div className="logo-icon">
-            <Sparkles size={22} />
+            <Sparkles
+              size={22}
+            />
           </div>
 
           {sidebarOpen && (
@@ -531,7 +951,9 @@ AI-Powered Data Analytics
             className="nav-item"
             href="#"
           >
-            <FileText size={19} />
+            <FileText
+              size={19}
+            />
 
             {sidebarOpen && (
               <span>
@@ -544,7 +966,9 @@ AI-Powered Data Analytics
             className="nav-item"
             href="#"
           >
-            <BarChart3 size={19} />
+            <BarChart3
+              size={19}
+            />
 
             {sidebarOpen && (
               <span>
@@ -557,7 +981,9 @@ AI-Powered Data Analytics
             className="nav-item"
             href="#"
           >
-            <Lightbulb size={19} />
+            <Lightbulb
+              size={19}
+            />
 
             {sidebarOpen && (
               <span>
@@ -574,7 +1000,9 @@ AI-Powered Data Analytics
             className="nav-item"
             href="#"
           >
-            <Settings size={19} />
+            <Settings
+              size={19}
+            />
 
             {sidebarOpen && (
               <span>
@@ -587,9 +1015,7 @@ AI-Powered Data Analytics
 
       </aside>
 
-      {/* =================================================
-          MAIN
-      ================================================= */}
+      {/* MAIN */}
 
       <main
         className={`main ${
@@ -599,9 +1025,7 @@ AI-Powered Data Analytics
         }`}
       >
 
-        {/* =================================================
-            TOPBAR
-        ================================================= */}
+        {/* TOPBAR */}
 
         <header className="topbar">
 
@@ -623,8 +1047,8 @@ AI-Powered Data Analytics
             </h1>
 
             <p>
-              Welcome back to your AI
-              analytics workspace.
+              Welcome back to your
+              AI analytics workspace.
             </p>
 
           </div>
@@ -639,7 +1063,8 @@ AI-Powered Data Analytics
                 handleFileChange
               }
               style={{
-                display: "none",
+                display:
+                  "none",
               }}
             />
 
@@ -648,9 +1073,13 @@ AI-Powered Data Analytics
               onClick={
                 openFilePicker
               }
-              disabled={loading}
+              disabled={
+                loading
+              }
             >
-              <Upload size={17} />
+              <Upload
+                size={17}
+              />
 
               {loading
                 ? "Analyzing..."
@@ -665,80 +1094,70 @@ AI-Powered Data Analytics
 
         </header>
 
-        {/* =================================================
-            CONTENT
-        ================================================= */}
+        {/* CONTENT */}
 
         <section className="dashboard">
 
-          {/* =================================================
-              HERO
-          ================================================= */}
+          {/* HERO */}
 
           <div className="hero">
 
             <div>
 
               <div
-  style={{
-    display: "flex",
-    alignItems: "center",
-    gap: "12px",
-    flexWrap: "wrap",
-  }}
->
-  <div className="hero-actions">
-  <span className="hero-badge">
-    <Sparkles size={14} />
-    AI POWERED
-  </span>
+                style={{
+                  display:
+                    "flex",
+                  alignItems:
+                    "center",
+                  gap: "12px",
+                  flexWrap:
+                    "wrap",
+                }}
+              >
 
-  {analysis && (
-    <button
-      className="download-button"
-      onClick={downloadReport}
-      type="button"
-    >
-      <Download size={16} />
-      Download Report
-    </button>
-  )}
-</div>
-    
-    
-  
+                <div className="hero-actions">
 
-  
-    
-      
-      
-      
-    
-      
-    
-  
-</div>
-                
-  
-  
+                  <span className="hero-badge">
+                    <Sparkles
+                      size={14}
+                    />
+                    AI POWERED
+                  </span>
 
-  
+                  {analysis && (
+                    <button
+                      className="download-button"
+                      onClick={
+                        downloadReport
+                      }
+                      type="button"
+                    >
+                      <Download
+                        size={16}
+                      />
+                      Download Report
+                    </button>
+                  )}
 
-                
-              
+                </div>
+
+              </div>
 
               <h2>
                 Turn your data into
                 <span>
                   {" "}
-                  intelligent insights.
+                  intelligent
+                  insights.
                 </span>
               </h2>
 
               <p>
-                Upload your CSV, analyze
-                your data, and let AI
-                uncover the insights that
+                Upload your CSV,
+                analyze your data,
+                and let AI uncover
+                the insights that
                 matter.
               </p>
 
@@ -749,9 +1168,13 @@ AI-Powered Data Analytics
               onClick={
                 openFilePicker
               }
-              disabled={loading}
+              disabled={
+                loading
+              }
             >
-              <Brain size={18} />
+              <Brain
+                size={18}
+              />
 
               {loading
                 ? "Analyzing..."
@@ -760,33 +1183,28 @@ AI-Powered Data Analytics
 
           </div>
 
-          {/* =================================================
-              ERROR
-          ================================================= */}
+          {/* ERROR */}
 
           {error && (
-
             <div
               className="evaluation-error"
               style={{
-                marginTop: "20px",
+                marginTop:
+                  "20px",
               }}
             >
               ⚠️ {error}
             </div>
-
           )}
 
-          {/* =================================================
-              CURRENT FILE
-          ================================================= */}
+          {/* CURRENT FILE */}
 
           {file && (
-
             <div
               className="recent-card"
               style={{
-                marginTop: "24px",
+                marginTop:
+                  "24px",
               }}
             >
 
@@ -810,19 +1228,18 @@ AI-Powered Data Analytics
                     clearDataset
                   }
                 >
-                  <X size={16} />
+                  <X
+                    size={16}
+                  />
                   Clear
                 </button>
 
               </div>
 
             </div>
-
           )}
 
-          {/* =================================================
-              STATS
-          ================================================= */}
+          {/* STATS */}
 
           <div className="stats-grid">
 
@@ -833,7 +1250,6 @@ AI-Powered Data Analytics
                   stat.icon;
 
                 return (
-
                   <div
                     className="stat-card"
                     key={
@@ -870,23 +1286,20 @@ AI-Powered Data Analytics
                     </div>
 
                   </div>
-
                 );
               }
             )}
 
           </div>
 
-          {/* =================================================
-              DATA QUALITY
-          ================================================= */}
+          {/* DATA QUALITY */}
 
           {analysis && (
-
             <div
               className="recent-card"
               style={{
-                marginTop: "24px",
+                marginTop:
+                  "24px",
               }}
             >
 
@@ -899,69 +1312,75 @@ AI-Powered Data Analytics
                   </h3>
 
                   <p>
-                    Missing values detected
-                    in your dataset
+                    Missing values
+                    detected in your
+                    dataset
                   </p>
 
                 </div>
 
-                <Lightbulb size={20} />
+                <Lightbulb
+                  size={20}
+                />
 
               </div>
 
               <div
                 style={{
-                  padding: "20px",
-                  display: "grid",
-                  gap: "14px",
+                  padding:
+                    "20px",
+                  display:
+                    "grid",
+                  gap:
+                    "14px",
                 }}
               >
 
-                {/* TOTAL MISSING */}
-
                 <div
                   style={{
-                    display: "flex",
+                    display:
+                      "flex",
                     justifyContent:
                       "space-between",
                     alignItems:
                       "center",
-                    padding: "14px",
-                    borderRadius: "10px",
+                    padding:
+                      "14px",
+                    borderRadius:
+                      "10px",
                     background:
                       "rgba(255,255,255,0.04)",
                   }}
                 >
 
                   <strong>
-                    Total Missing Values
+                    Total Missing
+                    Values
                   </strong>
 
                   <span className="stat-change">
-                    {
-                      Object.values(
-                        analysis.missing_values ||
-                          {}
-                      ).reduce(
-                        (
-                          total,
+                    {Object.values(
+                      analysis
+                        .missing_values ||
+                        {}
+                    ).reduce(
+                      (
+                        total,
+                        value
+                      ) =>
+                        total +
+                        getMissingCount(
                           value
-                        ) =>
-                          total +
-                          getMissingCount(
-                            value
-                          ),
-                        0
-                      )
-                    }
+                        ),
+                      0
+                    )}
                   </span>
 
                 </div>
 
-                {/* MISSING VALUE COLUMNS */}
-
                 {Object.entries(
-                  analysis.missing_values ||
+                  analysis
+                    .missing_values ||
                     {}
                 )
                   .filter(
@@ -971,12 +1390,10 @@ AI-Powered Data Analytics
                       ) > 0
                   )
                   .map(
-                    (
-                      [
-                        column,
-                        value,
-                      ]
-                    ) => {
+                    ([
+                      column,
+                      value,
+                    ]) => {
 
                       const count =
                         getMissingCount(
@@ -989,7 +1406,6 @@ AI-Powered Data Analytics
                         );
 
                       return (
-
                         <div
                           key={
                             column
@@ -1030,8 +1446,6 @@ AI-Powered Data Analytics
 
                           </div>
 
-                          {/* PROGRESS BAR */}
-
                           <div
                             style={{
                               height:
@@ -1070,15 +1484,13 @@ AI-Powered Data Analytics
                           </small>
 
                         </div>
-
                       );
                     }
                   )}
 
-                {/* NO MISSING VALUES */}
-
                 {Object.values(
-                  analysis.missing_values ||
+                  analysis
+                    .missing_values ||
                     {}
                 ).every(
                   (value) =>
@@ -1086,7 +1498,6 @@ AI-Powered Data Analytics
                       value
                     ) === 0
                 ) && (
-
                   <div
                     style={{
                       padding:
@@ -1097,27 +1508,21 @@ AI-Powered Data Analytics
                         "rgba(34,197,94,0.08)",
                     }}
                   >
-                    ✅ No missing values
-                    detected in this
-                    dataset.
+                    ✅ No missing
+                    values detected
+                    in this dataset.
                   </div>
-
                 )}
 
               </div>
 
             </div>
-
           )}
 
-          {/* =================================================
-              DATASET OVERVIEW
-          ================================================= */}
+          {/* DATASET OVERVIEW */}
 
           {analysis && (
-
             <>
-
               <div className="section-heading">
 
                 <div>
@@ -1127,8 +1532,9 @@ AI-Powered Data Analytics
                   </h2>
 
                   <p>
-                    Automatically detected
-                    dataset structure.
+                    Automatically
+                    detected dataset
+                    structure.
                   </p>
 
                 </div>
@@ -1137,9 +1543,7 @@ AI-Powered Data Analytics
 
               <div className="analytics-grid">
 
-                {/* =================================================
-                    COLUMNS
-                ================================================= */}
+                {/* COLUMNS */}
 
                 <div className="chart-card">
 
@@ -1174,7 +1578,6 @@ AI-Powered Data Analytics
                       (
                         column
                       ) => (
-
                         <div
                           key={
                             column
@@ -1188,7 +1591,6 @@ AI-Powered Data Analytics
                         >
                           {column}
                         </div>
-
                       )
                     )}
 
@@ -1196,14 +1598,13 @@ AI-Powered Data Analytics
 
                 </div>
 
-                {/* =================================================
-                    CORRELATION ANALYTICS
-                ================================================= */}
+                {/* CORRELATION */}
 
                 <div
                   className="chart-card"
                   style={{
-                    marginTop: "24px",
+                    marginTop:
+                      "24px",
                   }}
                 >
 
@@ -1217,8 +1618,9 @@ AI-Powered Data Analytics
                       </h3>
 
                       <p>
-                        Relationship between
-                        numeric features and
+                        Relationship
+                        between numeric
+                        features and
                         LoanApproved
                       </p>
 
@@ -1232,9 +1634,12 @@ AI-Powered Data Analytics
 
                   <div
                     style={{
-                      padding: "20px",
-                      display: "grid",
-                      gap: "16px",
+                      padding:
+                        "20px",
+                      display:
+                        "grid",
+                      gap:
+                        "16px",
                     }}
                   >
 
@@ -1290,7 +1695,6 @@ AI-Powered Data Analytics
                                 );
 
                               return (
-
                                 <div
                                   key={
                                     column
@@ -1353,8 +1757,6 @@ AI-Powered Data Analytics
                                             : "linear-gradient(90deg, #ef4444, #f97316)",
                                         borderRadius:
                                           "10px",
-                                        transition:
-                                          "width 0.5s ease",
                                       }}
                                     />
 
@@ -1376,26 +1778,21 @@ AI-Powered Data Analytics
                                   </small>
 
                                 </div>
-
                               );
                             }
                           )
                       : (
-
                         <p>
-                          Correlation data is
-                          not available.
+                          Correlation data
+                          is not available.
                         </p>
-
                       )}
 
                   </div>
 
                 </div>
 
-                {/* =================================================
-                    AI INSIGHTS
-                ================================================= */}
+                {/* AI INSIGHTS */}
 
                 <div className="insights-card">
 
@@ -1404,12 +1801,13 @@ AI-Powered Data Analytics
                     <div>
 
                       <h3>
-                        Latest AI Insights
+                        Latest AI
+                        Insights
                       </h3>
 
                       <p>
-                        Generated from your
-                        dataset
+                        Generated from
+                        your dataset
                       </p>
 
                     </div>
@@ -1428,10 +1826,7 @@ AI-Powered Data Analytics
                     }}
                   >
 
-                    {/* LOADING */}
-
                     {loading && (
-
                       <div className="insight-item">
 
                         <div className="insight-number">
@@ -1447,21 +1842,17 @@ AI-Powered Data Analytics
                           <p>
                             Finding patterns
                             and generating
-                            insights from your
-                            dataset.
+                            insights from
+                            your dataset.
                           </p>
 
                         </div>
 
                       </div>
-
                     )}
-
-                    {/* AI RESULTS */}
 
                     {!loading &&
                       insights && (
-
                         <div
                           style={{
                             display:
@@ -1514,7 +1905,6 @@ AI-Powered Data Analytics
                                 );
 
                               return (
-
                                 <div
                                   key={
                                     index
@@ -1563,12 +1953,7 @@ AI-Powered Data Analytics
                                         : "✨"}
                                     </div>
 
-                                    <strong
-                                      style={{
-                                        fontSize:
-                                          "15px",
-                                      }}
-                                    >
+                                    <strong>
                                       {
                                         section.title
                                       }
@@ -1590,7 +1975,6 @@ AI-Powered Data Analytics
                                         item,
                                         itemIndex
                                       ) => (
-
                                         <div
                                           key={
                                             itemIndex
@@ -1623,27 +2007,21 @@ AI-Powered Data Analytics
                                           </span>
 
                                         </div>
-
                                       )
                                     )}
 
                                   </div>
 
                                 </div>
-
                               );
                             }
                           )}
 
                         </div>
-
                       )}
-
-                    {/* NO INSIGHTS */}
 
                     {!loading &&
                       !insights && (
-
                         <div className="insight-item">
 
                           <div className="insight-number">
@@ -1666,7 +2044,6 @@ AI-Powered Data Analytics
                           </div>
 
                         </div>
-
                       )}
 
                   </div>
@@ -1675,14 +2052,13 @@ AI-Powered Data Analytics
 
               </div>
 
-              {/* =================================================
-                  AI EVIDENCE
-              ================================================= */}
+              {/* AI EVIDENCE */}
 
               <div
                 className="recent-card"
                 style={{
-                  marginTop: "24px",
+                  marginTop:
+                    "24px",
                 }}
               >
 
@@ -1695,27 +2071,31 @@ AI-Powered Data Analytics
                     </h3>
 
                     <p>
-                      Key findings backed
-                      by your dataset
+                      Key findings
+                      backed by your
+                      dataset
                     </p>
 
                   </div>
 
-                  <Brain size={20} />
+                  <Brain
+                    size={20}
+                  />
 
                 </div>
 
                 <div
                   style={{
-                    padding: "20px",
-                    display: "grid",
-                    gap: "14px",
+                    padding:
+                      "20px",
+                    display:
+                      "grid",
+                    gap:
+                      "14px",
                   }}
                 >
 
-                  {/* =================================================
-                      STRONGEST CORRELATION
-                  ================================================= */}
+                  {/* STRONGEST CORRELATION */}
 
                   {analysis
                     .correlations
@@ -1765,7 +2145,6 @@ AI-Powered Data Analytics
                         strongest;
 
                       return (
-
                         <div
                           style={{
                             padding:
@@ -1825,17 +2204,13 @@ AI-Powered Data Analytics
                           </div>
 
                         </div>
-
                       );
-
                     })()}
 
-                  {/* =================================================
-                      MISSING DATA
-                  ================================================= */}
+                  {/* MISSING DATA */}
 
-                  {analysis.missing_values && (
-
+                  {analysis
+                    .missing_values && (
                     <div
                       style={{
                         padding:
@@ -1873,13 +2248,10 @@ AI-Powered Data Analytics
                             ) > 0
                         )
                         .map(
-                          (
-                            [
-                              column,
-                              data,
-                            ]
-                          ) => (
-
+                          ([
+                            column,
+                            data,
+                          ]) => (
                             <div
                               key={
                                 column
@@ -1916,20 +2288,16 @@ AI-Powered Data Analytics
                               </strong>
 
                             </div>
-
                           )
                         )}
 
                     </div>
-
                   )}
 
-                  {/* =================================================
-                      OUTLIERS
-                  ================================================= */}
+                  {/* OUTLIERS */}
 
-                  {analysis.outliers && (
-
+                  {analysis
+                    .outliers && (
                     <div
                       style={{
                         padding:
@@ -1967,13 +2335,10 @@ AI-Powered Data Analytics
                             ) > 0
                         )
                         .map(
-                          (
-                            [
-                              column,
-                              data,
-                            ]
-                          ) => (
-
+                          ([
+                            column,
+                            data,
+                          ]) => (
                             <div
                               key={
                                 column
@@ -2006,36 +2371,31 @@ AI-Powered Data Analytics
                               </strong>
 
                             </div>
-
                           )
                         )}
 
                       {Object.values(
-                        analysis.outliers
+                        analysis
+                          .outliers
                       ).every(
                         (data) =>
                           Number(
                             data?.count
                           ) === 0
                       ) && (
-
                         <div>
                           No outliers
                           detected.
                         </div>
-
                       )}
 
                     </div>
-
                   )}
 
-                  {/* =================================================
-                      SUSPICIOUS VALUES
-                  ================================================= */}
+                  {/* DATA VALIDATION */}
 
-                  {analysis.numeric_statistics && (
-
+                  {analysis
+                    .numeric_statistics && (
                     <div
                       style={{
                         padding:
@@ -2071,9 +2431,7 @@ AI-Powered Data Analytics
                           const stats =
                             analysis
                               .numeric_statistics
-                              ?.[
-                                column
-                              ];
+                              ?.[column];
 
                           if (
                             !stats
@@ -2088,7 +2446,6 @@ AI-Powered Data Analytics
                             return null;
 
                           return (
-
                             <div
                               key={
                                 column
@@ -2118,30 +2475,22 @@ AI-Powered Data Analytics
                               </strong>
 
                             </div>
-
                           );
-
                         }
                       )}
 
                     </div>
-
                   )}
 
                 </div>
 
               </div>
-
             </>
-
           )}
 
-          {/* =================================================
-              GET STARTED
-          ================================================= */}
+          {/* GET STARTED */}
 
           {!analysis && (
-
             <div className="recent-card">
 
               <div className="card-header">
@@ -2153,8 +2502,9 @@ AI-Powered Data Analytics
                   </h3>
 
                   <p>
-                    Upload a CSV dataset
-                    to begin analysis.
+                    Upload a CSV
+                    dataset to begin
+                    analysis.
                   </p>
 
                 </div>
@@ -2174,7 +2524,6 @@ AI-Powered Data Analytics
               </div>
 
             </div>
-
           )}
 
         </section>
