@@ -686,21 +686,28 @@ AI-Powered Data Analytics
     flexWrap: "wrap",
   }}
 >
+  <div className="hero-actions">
   <span className="hero-badge">
     <Sparkles size={14} />
     AI POWERED
   </span>
 
   {analysis && (
-  <button
-    className="view-button"
-    onClick={downloadReport}
-    type="button"
-  >
-    <Download size={16} />
-    Download Report
-  </button>
-)}
+    <button
+      className="download-button"
+      onClick={downloadReport}
+      type="button"
+    >
+      <Download size={16} />
+      Download Report
+    </button>
+  )}
+</div>
+    
+    
+  
+
+  
     
       
       
