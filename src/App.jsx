@@ -1747,6 +1747,734 @@ function App() {
                   </div>
 
                 </div>
+                                {/* =================================================
+                    AI INSIGHTS
+                ================================================= */}
+
+                <div className="insights-card">
+
+                  <div className="card-header">
+
+                    <div>
+
+                      <h3>
+                        Latest AI Insights
+                      </h3>
+
+                      <p>
+                        Generated from your dataset
+                      </p>
+
+                    </div>
+
+                    <Sparkles size={20} />
+
+                  </div>
+
+                  <div
+                    className="insight-list"
+                    style={{
+                      padding: "20px",
+                    }}
+                  >
+
+                    {/* LOADING */}
+
+                    {loading && (
+                      <div className="insight-item">
+
+                        <div className="insight-number">
+                          ✨
+                        </div>
+
+                        <div>
+
+                          <strong>
+                            AI is analyzing...
+                          </strong>
+
+                          <p>
+                            Finding patterns and
+                            generating insights from
+                            your dataset.
+                          </p>
+
+                        </div>
+
+                      </div>
+                    )}
+
+                    {/* INSIGHTS */}
+
+                    {!loading && insights && (
+                      <div
+                        style={{
+                          display: "grid",
+                          gap: "16px",
+                        }}
+                      >
+
+                        {formatAIInsights(
+                          insights
+                        )?.map(
+                          (
+                            section,
+                            index
+                          ) => {
+
+                            const title =
+                              section.title.toLowerCase();
+
+                            const isQuality =
+                              title.includes(
+                                "quality"
+                              );
+
+                            const isPattern =
+                              title.includes(
+                                "pattern"
+                              );
+
+                            const isBusiness =
+                              title.includes(
+                                "business"
+                              );
+
+                            const isRecommendation =
+                              title.includes(
+                                "recommended"
+                              ) ||
+                              title.includes(
+                                "next step"
+                              );
+
+                            const isFinding =
+                              title.includes(
+                                "finding"
+                              ) ||
+                              title.includes(
+                                "insight"
+                              );
+
+                            return (
+                              <div
+                                key={index}
+                                style={{
+                                  padding:
+                                    "18px",
+                                  borderRadius:
+                                    "14px",
+                                  background:
+                                    "rgba(255,255,255,0.04)",
+                                  border:
+                                    "1px solid rgba(255,255,255,0.07)",
+                                }}
+                              >
+
+                                {/* SECTION HEADER */}
+
+                                <div
+                                  style={{
+                                    display:
+                                      "flex",
+                                    alignItems:
+                                      "center",
+                                    gap: "10px",
+                                    marginBottom:
+                                      "14px",
+                                  }}
+                                >
+
+                                  <div
+                                    style={{
+                                      fontSize:
+                                        "20px",
+                                    }}
+                                  >
+                                    {isQuality
+                                      ? "⚠️"
+                                      : isPattern
+                                      ? "🔍"
+                                      : isBusiness
+                                      ? "💼"
+                                      : isRecommendation
+                                      ? "🚀"
+                                      : isFinding
+                                      ? "💡"
+                                      : "✨"}
+                                  </div>
+
+                                  <strong>
+                                    {
+                                      section.title
+                                    }
+                                  </strong>
+
+                                </div>
+
+                                {/* ITEMS */}
+
+                                <div
+                                  style={{
+                                    display:
+                                      "grid",
+                                    gap: "10px",
+                                  }}
+                                >
+
+                                  {section.items.map(
+                                    (
+                                      item,
+                                      itemIndex
+                                    ) => (
+
+                                      <div
+                                        key={
+                                          itemIndex
+                                        }
+                                        style={{
+                                          display:
+                                            "flex",
+                                          gap:
+                                            "10px",
+                                          lineHeight:
+                                            "1.6",
+                                        }}
+                                      >
+
+                                        <span
+                                          style={{
+                                            opacity:
+                                              0.7,
+                                          }}
+                                        >
+                                          {isRecommendation
+                                            ? `${itemIndex + 1}.`
+                                            : "•"}
+                                        </span>
+
+                                        <span>
+                                          {item}
+                                        </span>
+
+                                      </div>
+
+                                    )
+                                  )}
+
+                                </div>
+
+                              </div>
+                            );
+                          }
+                        )}
+
+                      </div>
+                    )}
+
+                    {/* NO INSIGHTS */}
+
+                    {!loading && !insights && (
+                      <div className="insight-item">
+
+                        <div className="insight-number">
+                          —
+                        </div>
+
+                        <div>
+
+                          <strong>
+                            No insights yet
+                          </strong>
+
+                          <p>
+                            Upload a CSV dataset
+                            to generate AI
+                            insights.
+                          </p>
+
+                        </div>
+
+                      </div>
+                    )}
+
+                  </div>
+
+                </div>
+
+              </div>
+
+
+              {/* =====================================================
+                  AI EVIDENCE
+              ===================================================== */}
+
+              <div
+                className="recent-card"
+                style={{
+                  marginTop: "24px",
+                }}
+              >
+
+                <div className="card-header">
+
+                  <div>
+
+                    <h3>
+                      AI Evidence
+                    </h3>
+
+                    <p>
+                      Key findings backed
+                      by your dataset
+                    </p>
+
+                  </div>
+
+                  <Brain size={20} />
+
+                </div>
+
+                <div
+                  style={{
+                    padding: "20px",
+                    display: "grid",
+                    gap: "14px",
+                  }}
+                >
+
+                  {/* =================================================
+                      STRONGEST CORRELATION
+                  ================================================= */}
+
+                  {analysis
+                    .correlations
+                    ?.LoanApproved &&
+                    (() => {
+
+                      const correlations =
+                        analysis
+                          .correlations
+                          .LoanApproved;
+
+                      const strongest =
+                        Object.entries(
+                          correlations
+                        )
+                          .filter(
+                            ([column]) =>
+                              column !==
+                              "LoanApproved"
+                          )
+                          .sort(
+                            (
+                              [, a],
+                              [, b]
+                            ) =>
+                              Math.abs(
+                                Number(b)
+                              ) -
+                              Math.abs(
+                                Number(a)
+                              )
+                          )[0];
+
+                      if (!strongest) {
+                        return null;
+                      }
+
+                      const [
+                        column,
+                        value,
+                      ] = strongest;
+
+                      return (
+                        <div
+                          style={{
+                            padding:
+                              "16px",
+                            borderRadius:
+                              "12px",
+                            background:
+                              "rgba(99,102,241,0.08)",
+                            border:
+                              "1px solid rgba(99,102,241,0.18)",
+                          }}
+                        >
+
+                          <div
+                            style={{
+                              fontSize:
+                                "12px",
+                              opacity:
+                                0.7,
+                              marginBottom:
+                                "6px",
+                            }}
+                          >
+                            STRONGEST NUMERIC
+                            RELATIONSHIP
+                          </div>
+
+                          <strong
+                            style={{
+                              fontSize:
+                                "18px",
+                            }}
+                          >
+                            {column}
+                          </strong>
+
+                          <div
+                            style={{
+                              marginTop:
+                                "6px",
+                            }}
+                          >
+                            Correlation with{" "}
+                            <strong>
+                              LoanApproved
+                            </strong>
+                            :{" "}
+                            <strong>
+                              {Number(
+                                value
+                              ).toFixed(4)}
+                            </strong>
+                          </div>
+
+                        </div>
+                      );
+
+                    })()}
+
+
+                  {/* =================================================
+                      MISSING DATA
+                  ================================================= */}
+
+                  {analysis.missing_values && (
+                    <div
+                      style={{
+                        padding: "16px",
+                        borderRadius: "12px",
+                        background:
+                          "rgba(245,158,11,0.08)",
+                        border:
+                          "1px solid rgba(245,158,11,0.18)",
+                      }}
+                    >
+
+                      <div
+                        style={{
+                          fontSize: "12px",
+                          opacity: 0.7,
+                          marginBottom:
+                            "10px",
+                        }}
+                      >
+                        MISSING DATA
+                      </div>
+
+                      {Object.entries(
+                        analysis
+                          .missing_values
+                      )
+                        .filter(
+                          ([, data]) =>
+                            getMissingCount(
+                              data
+                            ) > 0
+                        )
+                        .map(
+                          ([
+                            column,
+                            data,
+                          ]) => (
+
+                            <div
+                              key={column}
+                              style={{
+                                display:
+                                  "flex",
+                                justifyContent:
+                                  "space-between",
+                                padding:
+                                  "7px 0",
+                              }}
+                            >
+
+                              <span>
+                                {column}
+                              </span>
+
+                              <strong>
+                                {
+                                  getMissingCount(
+                                    data
+                                  )
+                                }{" "}
+                                (
+                                {getMissingPercentage(
+                                  data
+                                ).toFixed(2)}
+                                %)
+                              </strong>
+
+                            </div>
+
+                          )
+                        )}
+
+                      {/* NO MISSING */}
+
+                      {Object.values(
+                        analysis
+                          .missing_values
+                      ).every(
+                        (data) =>
+                          getMissingCount(
+                            data
+                          ) === 0
+                      ) && (
+                        <div>
+                          No missing values
+                          detected.
+                        </div>
+                      )}
+
+                    </div>
+                  )}
+
+
+                  {/* =================================================
+                      OUTLIERS
+                  ================================================= */}
+
+                  {analysis.outliers && (
+                    <div
+                      style={{
+                        padding: "16px",
+                        borderRadius: "12px",
+                        background:
+                          "rgba(239,68,68,0.07)",
+                        border:
+                          "1px solid rgba(239,68,68,0.15)",
+                      }}
+                    >
+
+                      <div
+                        style={{
+                          fontSize: "12px",
+                          opacity: 0.7,
+                          marginBottom:
+                            "10px",
+                        }}
+                      >
+                        OUTLIER CHECK
+                      </div>
+
+                      {Object.entries(
+                        analysis.outliers
+                      )
+                        .filter(
+                          ([, data]) =>
+                            Number(
+                              data?.count
+                            ) > 0
+                        )
+                        .map(
+                          ([
+                            column,
+                            data,
+                          ]) => (
+
+                            <div
+                              key={column}
+                              style={{
+                                display:
+                                  "flex",
+                                justifyContent:
+                                  "space-between",
+                                padding:
+                                  "7px 0",
+                              }}
+                            >
+
+                              <span>
+                                {column}
+                              </span>
+
+                              <strong>
+                                {data.count}{" "}
+                                (
+                                {
+                                  data.percentage
+                                }
+                                %)
+                              </strong>
+
+                            </div>
+
+                          )
+                        )}
+
+                      {Object.values(
+                        analysis.outliers
+                      ).every(
+                        (data) =>
+                          Number(
+                            data?.count
+                          ) === 0
+                      ) && (
+                        <div>
+                          No outliers detected.
+                        </div>
+                      )}
+
+                    </div>
+                  )}
+
+
+                  {/* =================================================
+                      DATA VALIDATION
+                  ================================================= */}
+
+                  {analysis.numeric_statistics && (
+                    <div
+                      style={{
+                        padding: "16px",
+                        borderRadius: "12px",
+                        background:
+                          "rgba(239,68,68,0.06)",
+                        border:
+                          "1px solid rgba(239,68,68,0.12)",
+                      }}
+                    >
+
+                      <div
+                        style={{
+                          fontSize: "12px",
+                          opacity: 0.7,
+                          marginBottom:
+                            "10px",
+                        }}
+                      >
+                        DATA VALIDATION
+                      </div>
+
+                      {[
+                        "Income",
+                        "LoanAmount",
+                      ].map(
+                        (column) => {
+
+                          const stats =
+                            analysis
+                              .numeric_statistics
+                              ?.[column];
+
+                          if (!stats) {
+                            return null;
+                          }
+
+                          if (
+                            Number(
+                              stats.minimum
+                            ) >= 0
+                          ) {
+                            return null;
+                          }
+
+                          return (
+                            <div
+                              key={column}
+                              style={{
+                                display:
+                                  "flex",
+                                justifyContent:
+                                  "space-between",
+                                padding:
+                                  "7px 0",
+                              }}
+                            >
+
+                              <span>
+                                ⚠️ Negative{" "}
+                                {column}
+                              </span>
+
+                              <strong>
+                                Minimum:{" "}
+                                {
+                                  stats.minimum
+                                }
+                              </strong>
+
+                            </div>
+                          );
+
+                        }
+                      )}
+
+                    </div>
+                  )}
+
+                </div>
+
+              </div>
+
+            </>
+          )}
+
+
+          {/* =====================================================
+              GET STARTED
+          ===================================================== */}
+
+          {!analysis && (
+            <div className="recent-card">
+
+              <div className="card-header">
+
+                <div>
+
+                  <h3>
+                    Get Started
+                  </h3>
+
+                  <p>
+                    Upload a CSV dataset
+                    to begin analysis.
+                  </p>
+
+                </div>
+
+                <button
+                  className="view-button"
+                  onClick={
+                    openFilePicker
+                  }
+                  type="button"
+                >
+                  <Upload size={16} />
+                  Upload CSV
+                </button>
+
+              </div>
+
+            </div>
+          )}
+
+        </section>
+
+      </main>
+
+    </div>
+  );
+}
+
+export default App;
 
                 
 
