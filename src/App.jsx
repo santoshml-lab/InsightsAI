@@ -1096,7 +1096,9 @@ function App() {
             DASHBOARD CONTENT
         ===================================================== */}
 
-        <section className="dashboard">
+        {activePage === "dashboard" && (
+  <section className="dashboard">
+    
                     {/* =====================================================
               HERO
           ===================================================== */}
