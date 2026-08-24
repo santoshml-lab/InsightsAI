@@ -95,10 +95,15 @@ function formatAIInsights(text) {
 // =====================================================
 
 function App() {
+    // =====================================================
+  // STATE
+  // =====================================================
+
   const [sidebarOpen, setSidebarOpen] =
     useState(true);
+
   const [activePage, setActivePage] =
-  useState("dashboard");
+    useState("dashboard");
 
   const [file, setFile] =
     useState(null);
@@ -157,11 +162,7 @@ function App() {
         y = 20;
       }
 
-      doc.text(
-        lines,
-        x,
-        y
-      );
+      doc.text(lines, x, y);
 
       y +=
         lines.length * 7 + 3;
@@ -216,8 +217,7 @@ function App() {
     );
 
     addText(
-      file?.name ||
-        "Unknown",
+      file?.name || "Unknown",
       20,
       11
     );
@@ -246,8 +246,7 @@ function App() {
 
     addText(
       `Rows: ${
-        analysis.summary?.rows ??
-        "N/A"
+        analysis.summary?.rows ?? "N/A"
       }`,
       20,
       11
@@ -255,8 +254,7 @@ function App() {
 
     addText(
       `Columns: ${
-        analysis.summary?.columns ??
-        "N/A"
+        analysis.summary?.columns ?? "N/A"
       }`,
       20,
       11
@@ -264,9 +262,7 @@ function App() {
 
     addText(
       `Total Missing Values: ${
-        analysis.summary
-          ?.total_missing_values ??
-        "N/A"
+        analysis.summary?.total_missing_values ?? "N/A"
       }`,
       20,
       11
@@ -274,9 +270,7 @@ function App() {
 
     addText(
       `Duplicate Rows: ${
-        analysis.summary
-          ?.duplicate_rows ??
-        "N/A"
+        analysis.summary?.duplicate_rows ?? "N/A"
       }`,
       20,
       11
@@ -372,28 +366,20 @@ function App() {
     );
 
     if (
-      analysis.correlations
-        ?.LoanApproved
+      analysis.correlations?.LoanApproved
     ) {
       const strongest =
         Object.entries(
-          analysis
-            .correlations
-            .LoanApproved
+          analysis.correlations.LoanApproved
         )
           .filter(
             ([column]) =>
-              column !==
-              "LoanApproved"
+              column !== "LoanApproved"
           )
           .sort(
             ([, a], [, b]) =>
-              Math.abs(
-                Number(b)
-              ) -
-              Math.abs(
-                Number(a)
-              )
+              Math.abs(Number(b)) -
+              Math.abs(Number(a))
           )[0];
 
       if (strongest) {
@@ -440,23 +426,17 @@ function App() {
       "normal"
     );
 
-    if (
-      analysis.missing_values
-    ) {
+    if (analysis.missing_values) {
       const missingColumns =
         Object.entries(
-          analysis
-            .missing_values
+          analysis.missing_values
         ).filter(
           ([, data]) =>
-            getMissingCount(
-              data
-            ) > 0
+            getMissingCount(data) > 0
         );
 
       if (
-        missingColumns.length ===
-        0
+        missingColumns.length === 0
       ) {
         addText(
           "No missing values detected.",
@@ -502,22 +482,17 @@ function App() {
       "normal"
     );
 
-    if (
-      analysis.outliers
-    ) {
+    if (analysis.outliers) {
       const outliers =
         Object.entries(
           analysis.outliers
         ).filter(
           ([, data]) =>
-            Number(
-              data?.count
-            ) > 0
+            Number(data?.count) > 0
         );
 
       if (
-        outliers.length ===
-        0
+        outliers.length === 0
       ) {
         addText(
           "No outliers detected.",
@@ -543,9 +518,7 @@ function App() {
     // DATA VALIDATION
     // =====================================================
 
-    if (
-      analysis.numeric_statistics
-    ) {
+    if (analysis.numeric_statistics) {
       doc.setFont(
         "helvetica",
         "bold"
@@ -568,16 +541,14 @@ function App() {
       ].forEach(
         (column) => {
           const stats =
-            analysis
-              .numeric_statistics
-              ?.[column];
+            analysis.numeric_statistics?.[
+              column
+            ];
 
           if (!stats) return;
 
           if (
-            Number(
-              stats.minimum
-            ) >= 0
+            Number(stats.minimum) >= 0
           ) {
             return;
           }
@@ -617,14 +588,13 @@ function App() {
         file?.name?.replace(
           /\.csv$/i,
           ""
-        ) ||
-        "dataset"
+        ) || "dataset"
       }_InsightsAI_Report.pdf`;
 
     doc.save(filename);
   };
 
-  // =====================================================
+    // =====================================================
   // STATS
   // =====================================================
 
@@ -632,8 +602,7 @@ function App() {
     {
       title: "Rows",
       value:
-        analysis?.summary
-          ?.rows ?? "—",
+        analysis?.summary?.rows ?? "—",
       change:
         analysis
           ? "Analyzed"
@@ -643,8 +612,7 @@ function App() {
     {
       title: "Columns",
       value:
-        analysis?.summary
-          ?.columns ?? "—",
+        analysis?.summary?.columns ?? "—",
       change:
         analysis
           ? "Detected"
@@ -702,10 +670,7 @@ function App() {
         return;
       }
 
-      setFile(
-        selectedFile
-      );
-
+      setFile(selectedFile);
       setAnalysis(null);
       setInsights("");
       setError("");
@@ -720,9 +685,7 @@ function App() {
   // =====================================================
 
   const analyzeDataset =
-    async (
-      selectedFile
-    ) => {
+    async (selectedFile) => {
       try {
         setLoading(true);
         setError("");
@@ -774,9 +737,7 @@ function App() {
   // =====================================================
 
   const generateInsights =
-    async (
-      analysisData
-    ) => {
+    async (analysisData) => {
       try {
         const response =
           await fetch(
@@ -853,8 +814,7 @@ function App() {
     (value) => {
       if (
         value &&
-        typeof value ===
-          "object"
+        typeof value === "object"
       ) {
         return Number(
           value.count || 0
@@ -870,19 +830,17 @@ function App() {
     (value) => {
       if (
         value &&
-        typeof value ===
-          "object"
+        typeof value === "object"
       ) {
         return Number(
-          value.percentage ||
-            0
+          value.percentage || 0
         );
       }
 
       const rows =
         Number(
-          analysis?.summary
-            ?.rows || 0
+          analysis?.summary?.rows ||
+            0
         );
 
       const count =
@@ -891,103 +849,34 @@ function App() {
       if (!rows) return 0;
 
       return (
-        (count / rows) *
-        100
+        (count / rows) * 100
       );
     };
-
-  // =====================================================
+    // =====================================================
   // RENDER
   // =====================================================
 
   return (
     <div className="app">
 
-      {/* SIDEBAR */}
+      {/* =====================================================
+          SIDEBAR
+      ===================================================== */}
 
-      <nav className="sidebar-nav">
+      <aside
+        className={`sidebar ${
+          sidebarOpen
+            ? "sidebar-open"
+            : "sidebar-closed"
+        }`}
+      >
 
-  <button
-    className={`nav-item ${
-      activePage === "dashboard"
-        ? "active"
-        : ""
-    }`}
-    onClick={() =>
-      setActivePage("dashboard")
-    }
-  >
-    <Home size={19} />
+        {/* LOGO */}
 
-    {sidebarOpen && (
-      <span>Dashboard</span>
-    )}
-  </button>
-
-  <button
-    className={`nav-item ${
-      activePage === "documents"
-        ? "active"
-        : ""
-    }`}
-    onClick={() =>
-      setActivePage("documents")
-    }
-  >
-    <FileText size={19} />
-
-    {sidebarOpen && (
-      <span>Documents</span>
-    )}
-  </button>
-
-  <button
-    className={`nav-item ${
-      activePage === "analytics"
-        ? "active"
-        : ""
-    }`}
-    onClick={() =>
-      setActivePage("analytics")
-    }
-  >
-    <BarChart3 size={19} />
-
-    {sidebarOpen && (
-      <span>Analytics</span>
-    )}
-  </button>
-
-  <button
-    className={`nav-item ${
-      activePage === "insights"
-        ? "active"
-        : ""
-    }`}
-    onClick={() =>
-      setActivePage("insights")
-    }
-  >
-    <Lightbulb size={19} />
-
-    {sidebarOpen && (
-      <span>AI Insights</span>
-    )}
-  </button>
-
-</nav>
-        
-          
-            
-            
-        
-      
         <div className="logo">
 
           <div className="logo-icon">
-            <Sparkles
-              size={22}
-            />
+            <Sparkles size={22} />
           </div>
 
           {sidebarOpen && (
@@ -1004,11 +893,19 @@ function App() {
 
         </div>
 
+        {/* NAVIGATION */}
+
         <nav className="sidebar-nav">
 
-          <a
-            className="nav-item active"
-            href="#"
+          <button
+            className={`nav-item ${
+              activePage === "dashboard"
+                ? "active"
+                : ""
+            }`}
+            onClick={() =>
+              setActivePage("dashboard")
+            }
           >
             <Home size={19} />
 
@@ -1017,77 +914,97 @@ function App() {
                 Dashboard
               </span>
             )}
-          </a>
+          </button>
 
-          <a
-            className="nav-item"
-            href="#"
+          <button
+            className={`nav-item ${
+              activePage === "documents"
+                ? "active"
+                : ""
+            }`}
+            onClick={() =>
+              setActivePage("documents")
+            }
           >
-            <FileText
-              size={19}
-            />
+            <FileText size={19} />
 
             {sidebarOpen && (
               <span>
                 Documents
               </span>
             )}
-          </a>
+          </button>
 
-          <a
-            className="nav-item"
-            href="#"
+          <button
+            className={`nav-item ${
+              activePage === "analytics"
+                ? "active"
+                : ""
+            }`}
+            onClick={() =>
+              setActivePage("analytics")
+            }
           >
-            <BarChart3
-              size={19}
-            />
+            <BarChart3 size={19} />
 
             {sidebarOpen && (
               <span>
                 Analytics
               </span>
             )}
-          </a>
+          </button>
 
-          <a
-            className="nav-item"
-            href="#"
+          <button
+            className={`nav-item ${
+              activePage === "insights"
+                ? "active"
+                : ""
+            }`}
+            onClick={() =>
+              setActivePage("insights")
+            }
           >
-            <Lightbulb
-              size={19}
-            />
+            <Lightbulb size={19} />
 
             {sidebarOpen && (
               <span>
                 AI Insights
               </span>
             )}
-          </a>
+          </button>
 
         </nav>
 
+        {/* SIDEBAR BOTTOM */}
+
         <div className="sidebar-bottom">
 
-          <a
-            className="nav-item"
-            href="#"
+          <button
+            className={`nav-item ${
+              activePage === "settings"
+                ? "active"
+                : ""
+            }`}
+            onClick={() =>
+              setActivePage("settings")
+            }
           >
-            <Settings
-              size={19}
-            />
+            <Settings size={19} />
 
             {sidebarOpen && (
               <span>
                 Settings
               </span>
             )}
-          </a>
+          </button>
 
         </div>
 
       </aside>
 
-      {/* MAIN */}
+      {/* =====================================================
+          MAIN
+      ===================================================== */}
 
       <main
         className={`main ${
@@ -1097,7 +1014,9 @@ function App() {
         }`}
       >
 
-        {/* TOPBAR */}
+        {/* =====================================================
+            TOPBAR
+        ===================================================== */}
 
         <header className="topbar">
 
@@ -1108,8 +1027,13 @@ function App() {
                 !sidebarOpen
               )
             }
+            type="button"
           >
-            <Menu size={22} />
+            {sidebarOpen ? (
+              <X size={22} />
+            ) : (
+              <Menu size={22} />
+            )}
           </button>
 
           <div className="topbar-title">
@@ -1127,6 +1051,8 @@ function App() {
 
           <div className="topbar-actions">
 
+            {/* HIDDEN FILE INPUT */}
+
             <input
               ref={fileInputRef}
               type="file"
@@ -1135,28 +1061,28 @@ function App() {
                 handleFileChange
               }
               style={{
-                display:
-                  "none",
+                display: "none",
               }}
             />
+
+            {/* UPLOAD BUTTON */}
 
             <button
               className="upload-button"
               onClick={
                 openFilePicker
               }
-              disabled={
-                loading
-              }
+              disabled={loading}
+              type="button"
             >
-              <Upload
-                size={17}
-              />
+              <Upload size={17} />
 
               {loading
                 ? "Analyzing..."
                 : "Upload CSV"}
             </button>
+
+            {/* AVATAR */}
 
             <div className="avatar">
               S
@@ -1166,11 +1092,14 @@ function App() {
 
         </header>
 
-        {/* CONTENT */}
+        {/* =====================================================
+            DASHBOARD CONTENT
+        ===================================================== */}
 
         <section className="dashboard">
-
-          {/* HERO */}
+                    {/* =====================================================
+              HERO
+          ===================================================== */}
 
           <div className="hero">
 
@@ -1178,22 +1107,17 @@ function App() {
 
               <div
                 style={{
-                  display:
-                    "flex",
-                  alignItems:
-                    "center",
+                  display: "flex",
+                  alignItems: "center",
                   gap: "12px",
-                  flexWrap:
-                    "wrap",
+                  flexWrap: "wrap",
                 }}
               >
 
                 <div className="hero-actions">
 
                   <span className="hero-badge">
-                    <Sparkles
-                      size={14}
-                    />
+                    <Sparkles size={14} />
                     AI POWERED
                   </span>
 
@@ -1205,9 +1129,7 @@ function App() {
                       }
                       type="button"
                     >
-                      <Download
-                        size={16}
-                      />
+                      <Download size={16} />
                       Download Report
                     </button>
                   )}
@@ -1220,8 +1142,7 @@ function App() {
                 Turn your data into
                 <span>
                   {" "}
-                  intelligent
-                  insights.
+                  intelligent insights.
                 </span>
               </h2>
 
@@ -1229,8 +1150,7 @@ function App() {
                 Upload your CSV,
                 analyze your data,
                 and let AI uncover
-                the insights that
-                matter.
+                the insights that matter.
               </p>
 
             </div>
@@ -1240,13 +1160,10 @@ function App() {
               onClick={
                 openFilePicker
               }
-              disabled={
-                loading
-              }
+              disabled={loading}
+              type="button"
             >
-              <Brain
-                size={18}
-              />
+              <Brain size={18} />
 
               {loading
                 ? "Analyzing..."
@@ -1255,28 +1172,30 @@ function App() {
 
           </div>
 
-          {/* ERROR */}
+          {/* =====================================================
+              ERROR
+          ===================================================== */}
 
           {error && (
             <div
               className="evaluation-error"
               style={{
-                marginTop:
-                  "20px",
+                marginTop: "20px",
               }}
             >
               ⚠️ {error}
             </div>
           )}
 
-          {/* CURRENT FILE */}
+          {/* =====================================================
+              CURRENT FILE
+          ===================================================== */}
 
           {file && (
             <div
               className="recent-card"
               style={{
-                marginTop:
-                  "24px",
+                marginTop: "24px",
               }}
             >
 
@@ -1299,10 +1218,9 @@ function App() {
                   onClick={
                     clearDataset
                   }
+                  type="button"
                 >
-                  <X
-                    size={16}
-                  />
+                  <X size={16} />
                   Clear
                 </button>
 
@@ -1311,7 +1229,9 @@ function App() {
             </div>
           )}
 
-          {/* STATS */}
+                    {/* =====================================================
+              STATS
+          ===================================================== */}
 
           <div className="stats-grid">
 
@@ -1324,37 +1244,33 @@ function App() {
                 return (
                   <div
                     className="stat-card"
-                    key={
-                      stat.title
-                    }
+                    key={stat.title}
                   >
+
+                    {/* TOP */}
 
                     <div className="stat-top">
 
                       <div className="stat-icon">
-                        <Icon
-                          size={20}
-                        />
+                        <Icon size={20} />
                       </div>
 
                       <span className="stat-change">
-                        {
-                          stat.change
-                        }
+                        {stat.change}
                       </span>
 
                     </div>
 
+                    {/* VALUE */}
+
                     <div className="stat-value">
-                      {
-                        stat.value
-                      }
+                      {stat.value}
                     </div>
 
+                    {/* TITLE */}
+
                     <div className="stat-title">
-                      {
-                        stat.title
-                      }
+                      {stat.title}
                     </div>
 
                   </div>
@@ -1363,17 +1279,19 @@ function App() {
             )}
 
           </div>
-
-          {/* DATA QUALITY */}
+                    {/* =====================================================
+              DATA QUALITY
+          ===================================================== */}
 
           {analysis && (
             <div
               className="recent-card"
               style={{
-                marginTop:
-                  "24px",
+                marginTop: "24px",
               }}
             >
+
+              {/* HEADER */}
 
               <div className="card-header">
 
@@ -1384,57 +1302,48 @@ function App() {
                   </h3>
 
                   <p>
-                    Missing values
-                    detected in your
-                    dataset
+                    Missing values detected
+                    in your dataset
                   </p>
 
                 </div>
 
-                <Lightbulb
-                  size={20}
-                />
+                <Lightbulb size={20} />
 
               </div>
 
+              {/* CONTENT */}
+
               <div
                 style={{
-                  padding:
-                    "20px",
-                  display:
-                    "grid",
-                  gap:
-                    "14px",
+                  padding: "20px",
+                  display: "grid",
+                  gap: "14px",
                 }}
               >
 
+                {/* TOTAL MISSING */}
+
                 <div
                   style={{
-                    display:
-                      "flex",
+                    display: "flex",
                     justifyContent:
                       "space-between",
-                    alignItems:
-                      "center",
-                    padding:
-                      "14px",
-                    borderRadius:
-                      "10px",
+                    alignItems: "center",
+                    padding: "14px",
+                    borderRadius: "10px",
                     background:
                       "rgba(255,255,255,0.04)",
                   }}
                 >
 
                   <strong>
-                    Total Missing
-                    Values
+                    Total Missing Values
                   </strong>
 
                   <span className="stat-change">
                     {Object.values(
-                      analysis
-                        .missing_values ||
-                        {}
+                      analysis.missing_values || {}
                     ).reduce(
                       (
                         total,
@@ -1450,10 +1359,10 @@ function App() {
 
                 </div>
 
+                {/* MISSING VALUES BY COLUMN */}
+
                 {Object.entries(
-                  analysis
-                    .missing_values ||
-                    {}
+                  analysis.missing_values || {}
                 )
                   .filter(
                     ([, value]) =>
@@ -1479,12 +1388,9 @@ function App() {
 
                       return (
                         <div
-                          key={
-                            column
-                          }
+                          key={column}
                           style={{
-                            padding:
-                              "14px",
+                            padding: "14px",
                             borderRadius:
                               "10px",
                             background:
@@ -1492,10 +1398,11 @@ function App() {
                           }}
                         >
 
+                          {/* COLUMN NAME */}
+
                           <div
                             style={{
-                              display:
-                                "flex",
+                              display: "flex",
                               justifyContent:
                                 "space-between",
                               marginBottom:
@@ -1504,24 +1411,20 @@ function App() {
                           >
 
                             <strong>
-                              {
-                                column
-                              }
+                              {column}
                             </strong>
 
                             <span>
-                              {
-                                count
-                              }{" "}
-                              missing
+                              {count} missing
                             </span>
 
                           </div>
 
+                          {/* PROGRESS BAR */}
+
                           <div
                             style={{
-                              height:
-                                "7px",
+                              height: "7px",
                               borderRadius:
                                 "10px",
                               background:
@@ -1537,8 +1440,7 @@ function App() {
                                   percentage,
                                   100
                                 )}%`,
-                                height:
-                                  "100%",
+                                height: "100%",
                                 background:
                                   "linear-gradient(90deg, #6366f1, #8b5cf6)",
                                 borderRadius:
@@ -1560,10 +1462,10 @@ function App() {
                     }
                   )}
 
+                {/* NO MISSING VALUES */}
+
                 {Object.values(
-                  analysis
-                    .missing_values ||
-                    {}
+                  analysis.missing_values || {}
                 ).every(
                   (value) =>
                     getMissingCount(
@@ -1572,17 +1474,14 @@ function App() {
                 ) && (
                   <div
                     style={{
-                      padding:
-                        "16px",
-                      borderRadius:
-                        "10px",
+                      padding: "16px",
+                      borderRadius: "10px",
                       background:
                         "rgba(34,197,94,0.08)",
                     }}
                   >
-                    ✅ No missing
-                    values detected
-                    in this dataset.
+                    ✅ No missing values
+                    detected in this dataset.
                   </div>
                 )}
 
@@ -1591,7 +1490,9 @@ function App() {
             </div>
           )}
 
-          {/* DATASET OVERVIEW */}
+                    {/* =====================================================
+              DATASET OVERVIEW
+          ===================================================== */}
 
           {analysis && (
             <>
@@ -1604,9 +1505,8 @@ function App() {
                   </h2>
 
                   <p>
-                    Automatically
-                    detected dataset
-                    structure.
+                    Automatically detected
+                    dataset structure.
                   </p>
 
                 </div>
@@ -1615,7 +1515,9 @@ function App() {
 
               <div className="analytics-grid">
 
-                {/* COLUMNS */}
+                {/* =================================================
+                    COLUMNS
+                ================================================= */}
 
                 <div className="chart-card">
 
@@ -1633,980 +1535,220 @@ function App() {
 
                     </div>
 
-                    <BarChart3
-                      size={20}
-                    />
+                    <BarChart3 size={20} />
 
                   </div>
 
                   <div
                     style={{
-                      padding:
-                        "20px",
+                      padding: "20px",
                     }}
                   >
 
-                    {analysis.columns?.map(
-                      (
-                        column
-                      ) => (
-                        <div
-                          key={
-                            column
-                          }
-                          style={{
-                            padding:
-                              "10px 0",
-                            borderBottom:
-                              "1px solid rgba(255,255,255,0.08)",
-                          }}
-                        >
-                          {column}
-                        </div>
+                    {analysis.columns?.length > 0 ? (
+                      analysis.columns.map(
+                        (column) => (
+                          <div
+                            key={column}
+                            style={{
+                              padding:
+                                "10px 0",
+                              borderBottom:
+                                "1px solid rgba(255,255,255,0.08)",
+                            }}
+                          >
+                            {column}
+                          </div>
+                        )
                       )
+                    ) : (
+                      <p>
+                        No columns detected.
+                      </p>
                     )}
 
                   </div>
 
                 </div>
 
-                {/* CORRELATION */}
+                                {/* =================================================
+                    CORRELATION
+                ================================================= */}
 
-                <div
-                  className="chart-card"
-                  style={{
-                    marginTop:
-                      "24px",
-                  }}
-                >
+                <div className="chart-card">
 
                   <div className="card-header">
 
                     <div>
 
                       <h3>
-                        Loan Approval
-                        Correlation
+                        Loan Approval Correlation
                       </h3>
 
                       <p>
-                        Relationship
-                        between numeric
-                        features and
+                        Relationship between
+                        numeric features and
                         LoanApproved
                       </p>
 
                     </div>
 
-                    <BarChart3
-                      size={20}
-                    />
+                    <BarChart3 size={20} />
 
                   </div>
 
                   <div
                     style={{
-                      padding:
-                        "20px",
-                      display:
-                        "grid",
-                      gap:
-                        "16px",
+                      padding: "20px",
+                      display: "grid",
+                      gap: "16px",
                     }}
                   >
 
                     {analysis
                       ?.correlations
-                      ?.LoanApproved
-                      ? Object.entries(
-                          analysis
-                            .correlations
-                            .LoanApproved
-                        )
-                          .filter(
-                            ([column]) =>
-                              column !==
-                              "LoanApproved"
-                          )
-                          .sort(
-                            (
-                              [, a],
-                              [, b]
-                            ) =>
-                              Math.abs(
-                                Number(
-                                  b
-                                )
-                              ) -
-                              Math.abs(
-                                Number(
-                                  a
-                                )
-                              )
-                          )
-                          .map(
-                            (
-                              [
-                                column,
-                                value,
-                              ]
-                            ) => {
+                      ?.LoanApproved ? (
 
-                              const correlation =
-                                Number(
-                                  value
-                                );
-
-                              const percentage =
-                                Math.min(
-                                  Math.abs(
-                                    correlation
-                                  ) *
-                                    100,
-                                  100
-                                );
-
-                              return (
-                                <div
-                                  key={
-                                    column
-                                  }
-                                  style={{
-                                    display:
-                                      "grid",
-                                    gap:
-                                      "8px",
-                                  }}
-                                >
-
-                                  <div
-                                    style={{
-                                      display:
-                                        "flex",
-                                      justifyContent:
-                                        "space-between",
-                                      alignItems:
-                                        "center",
-                                    }}
-                                  >
-
-                                    <strong>
-                                      {
-                                        column
-                                      }
-                                    </strong>
-
-                                    <span>
-                                      {correlation.toFixed(
-                                        3
-                                      )}
-                                    </span>
-
-                                  </div>
-
-                                  <div
-                                    style={{
-                                      height:
-                                        "8px",
-                                      borderRadius:
-                                        "10px",
-                                      background:
-                                        "rgba(255,255,255,0.08)",
-                                      overflow:
-                                        "hidden",
-                                    }}
-                                  >
-
-                                    <div
-                                      style={{
-                                        width: `${percentage}%`,
-                                        height:
-                                          "100%",
-                                        background:
-                                          correlation >=
-                                          0
-                                            ? "linear-gradient(90deg, #6366f1, #8b5cf6)"
-                                            : "linear-gradient(90deg, #ef4444, #f97316)",
-                                        borderRadius:
-                                          "10px",
-                                      }}
-                                    />
-
-                                  </div>
-
-                                  <small
-                                    style={{
-                                      opacity:
-                                        0.7,
-                                    }}
-                                  >
-                                    {correlation >
-                                    0
-                                      ? "Positive relationship"
-                                      : correlation <
-                                        0
-                                      ? "Negative relationship"
-                                      : "No linear relationship"}
-                                  </small>
-
-                                </div>
-                              );
-                            }
-                          )
-                      : (
-                        <p>
-                          Correlation data
-                          is not available.
-                        </p>
-                      )}
-
-                  </div>
-
-                </div>
-
-                {/* AI INSIGHTS */}
-
-                <div className="insights-card">
-
-                  <div className="card-header">
-
-                    <div>
-
-                      <h3>
-                        Latest AI
-                        Insights
-                      </h3>
-
-                      <p>
-                        Generated from
-                        your dataset
-                      </p>
-
-                    </div>
-
-                    <Sparkles
-                      size={20}
-                    />
-
-                  </div>
-
-                  <div
-                    className="insight-list"
-                    style={{
-                      padding:
-                        "20px",
-                    }}
-                  >
-
-                    {loading && (
-                      <div className="insight-item">
-
-                        <div className="insight-number">
-                          ✨
-                        </div>
-
-                        <div>
-
-                          <strong>
-                            AI is analyzing...
-                          </strong>
-
-                          <p>
-                            Finding patterns
-                            and generating
-                            insights from
-                            your dataset.
-                          </p>
-
-                        </div>
-
-                      </div>
-                    )}
-
-                    {!loading &&
-                      insights && (
-                        <div
-                          style={{
-                            display:
-                              "grid",
-                            gap:
-                              "16px",
-                          }}
-                        >
-
-                          {formatAIInsights(
-                            insights
-                          )?.map(
-                            (
-                              section,
-                              index
-                            ) => {
-
-                              const title =
-                                section.title.toLowerCase();
-
-                              const isQuality =
-                                title.includes(
-                                  "quality"
-                                );
-
-                              const isPattern =
-                                title.includes(
-                                  "pattern"
-                                );
-
-                              const isBusiness =
-                                title.includes(
-                                  "business"
-                                );
-
-                              const isRecommendation =
-                                title.includes(
-                                  "recommended"
-                                ) ||
-                                title.includes(
-                                  "next step"
-                                );
-
-                              const isFinding =
-                                title.includes(
-                                  "finding"
-                                ) ||
-                                title.includes(
-                                  "insight"
-                                );
-
-                              return (
-                                <div
-                                  key={
-                                    index
-                                  }
-                                  style={{
-                                    padding:
-                                      "18px",
-                                    borderRadius:
-                                      "14px",
-                                    background:
-                                      "rgba(255,255,255,0.04)",
-                                    border:
-                                      "1px solid rgba(255,255,255,0.07)",
-                                  }}
-                                >
-
-                                  <div
-                                    style={{
-                                      display:
-                                        "flex",
-                                      alignItems:
-                                        "center",
-                                      gap:
-                                        "10px",
-                                      marginBottom:
-                                        "14px",
-                                    }}
-                                  >
-
-                                    <div
-                                      style={{
-                                        fontSize:
-                                          "20px",
-                                      }}
-                                    >
-                                      {isQuality
-                                        ? "⚠️"
-                                        : isPattern
-                                        ? "🔍"
-                                        : isBusiness
-                                        ? "💼"
-                                        : isRecommendation
-                                        ? "🚀"
-                                        : isFinding
-                                        ? "💡"
-                                        : "✨"}
-                                    </div>
-
-                                    <strong>
-                                      {
-                                        section.title
-                                      }
-                                    </strong>
-
-                                  </div>
-
-                                  <div
-                                    style={{
-                                      display:
-                                        "grid",
-                                      gap:
-                                        "10px",
-                                    }}
-                                  >
-
-                                    {section.items.map(
-                                      (
-                                        item,
-                                        itemIndex
-                                      ) => (
-                                        <div
-                                          key={
-                                            itemIndex
-                                          }
-                                          style={{
-                                            display:
-                                              "flex",
-                                            gap:
-                                              "10px",
-                                            lineHeight:
-                                              "1.6",
-                                          }}
-                                        >
-
-                                          <span
-                                            style={{
-                                              opacity:
-                                                0.7,
-                                            }}
-                                          >
-                                            {isRecommendation
-                                              ? `${itemIndex + 1}.`
-                                              : "•"}
-                                          </span>
-
-                                          <span>
-                                            {
-                                              item
-                                            }
-                                          </span>
-
-                                        </div>
-                                      )
-                                    )}
-
-                                  </div>
-
-                                </div>
-                              );
-                            }
-                          )}
-
-                        </div>
-                      )}
-
-                    {!loading &&
-                      !insights && (
-                        <div className="insight-item">
-
-                          <div className="insight-number">
-                            —
-                          </div>
-
-                          <div>
-
-                            <strong>
-                              No insights yet
-                            </strong>
-
-                            <p>
-                              Upload a CSV
-                              dataset to
-                              generate AI
-                              insights.
-                            </p>
-
-                          </div>
-
-                        </div>
-                      )}
-
-                  </div>
-
-                </div>
-
-              </div>
-
-              {/* AI EVIDENCE */}
-
-              <div
-                className="recent-card"
-                style={{
-                  marginTop:
-                    "24px",
-                }}
-              >
-
-                <div className="card-header">
-
-                  <div>
-
-                    <h3>
-                      AI Evidence
-                    </h3>
-
-                    <p>
-                      Key findings
-                      backed by your
-                      dataset
-                    </p>
-
-                  </div>
-
-                  <Brain
-                    size={20}
-                  />
-
-                </div>
-
-                <div
-                  style={{
-                    padding:
-                      "20px",
-                    display:
-                      "grid",
-                    gap:
-                      "14px",
-                  }}
-                >
-
-                  {/* STRONGEST CORRELATION */}
-
-                  {analysis
-                    .correlations
-                    ?.LoanApproved &&
-                    (() => {
-
-                      const correlations =
+                      Object.entries(
                         analysis
                           .correlations
-                          .LoanApproved;
-
-                      const strongest =
-                        Object.entries(
-                          correlations
-                        )
-                          .filter(
-                            ([column]) =>
-                              column !==
-                              "LoanApproved"
-                          )
-                          .sort(
-                            (
-                              [, a],
-                              [, b]
-                            ) =>
-                              Math.abs(
-                                Number(
-                                  b
-                                )
-                              ) -
-                              Math.abs(
-                                Number(
-                                  a
-                                )
-                              )
-                          )[0];
-
-                      if (
-                        !strongest
-                      )
-                        return null;
-
-                      const [
-                        column,
-                        value,
-                      ] =
-                        strongest;
-
-                      return (
-                        <div
-                          style={{
-                            padding:
-                              "16px",
-                            borderRadius:
-                              "12px",
-                            background:
-                              "rgba(99,102,241,0.08)",
-                            border:
-                              "1px solid rgba(99,102,241,0.18)",
-                          }}
-                        >
-
-                          <div
-                            style={{
-                              fontSize:
-                                "12px",
-                              opacity:
-                                0.7,
-                              marginBottom:
-                                "6px",
-                            }}
-                          >
-                            STRONGEST NUMERIC
-                            RELATIONSHIP
-                          </div>
-
-                          <strong
-                            style={{
-                              fontSize:
-                                "18px",
-                            }}
-                          >
-                            {
-                              column
-                            }
-                          </strong>
-
-                          <div
-                            style={{
-                              marginTop:
-                                "6px",
-                            }}
-                          >
-                            Correlation with{" "}
-                            <strong>
-                              LoanApproved
-                            </strong>
-                            :{" "}
-                            <strong>
-                              {Number(
-                                value
-                              ).toFixed(
-                                4
-                              )}
-                            </strong>
-                          </div>
-
-                        </div>
-                      );
-                    })()}
-
-                  {/* MISSING DATA */}
-
-                  {analysis
-                    .missing_values && (
-                    <div
-                      style={{
-                        padding:
-                          "16px",
-                        borderRadius:
-                          "12px",
-                        background:
-                          "rgba(245,158,11,0.08)",
-                        border:
-                          "1px solid rgba(245,158,11,0.18)",
-                      }}
-                    >
-
-                      <div
-                        style={{
-                          fontSize:
-                            "12px",
-                          opacity:
-                            0.7,
-                          marginBottom:
-                            "10px",
-                        }}
-                      >
-                        MISSING DATA
-                      </div>
-
-                      {Object.entries(
-                        analysis
-                          .missing_values
+                          .LoanApproved
                       )
                         .filter(
-                          ([, data]) =>
-                            getMissingCount(
-                              data
-                            ) > 0
+                          ([column]) =>
+                            column !==
+                            "LoanApproved"
+                        )
+                        .sort(
+                          (
+                            [, a],
+                            [, b]
+                          ) =>
+                            Math.abs(
+                              Number(b)
+                            ) -
+                            Math.abs(
+                              Number(a)
+                            )
                         )
                         .map(
-                          ([
-                            column,
-                            data,
-                          ]) => (
-                            <div
-                              key={
-                                column
-                              }
-                              style={{
-                                display:
-                                  "flex",
-                                justifyContent:
-                                  "space-between",
-                                padding:
-                                  "7px 0",
-                              }}
-                            >
+                          (
+                            [
+                              column,
+                              value,
+                            ]
+                          ) => {
 
-                              <span>
-                                {
-                                  column
-                                }
-                              </span>
+                            const correlation =
+                              Number(value);
 
-                              <strong>
-                                {
-                                  getMissingCount(
-                                    data
-                                  )
-                                }{" "}
-                                (
-                                {getMissingPercentage(
-                                  data
-                                ).toFixed(
-                                  2
-                                )}
-                                %)
-                              </strong>
+                            const percentage =
+                              Math.min(
+                                Math.abs(
+                                  correlation
+                                ) * 100,
+                                100
+                              );
 
-                            </div>
-                          )
-                        )}
+                            return (
+                              <div
+                                key={column}
+                                style={{
+                                  display:
+                                    "grid",
+                                  gap: "8px",
+                                }}
+                              >
 
-                    </div>
-                  )}
+                                {/* COLUMN + VALUE */}
 
-                  {/* OUTLIERS */}
+                                <div
+                                  style={{
+                                    display:
+                                      "flex",
+                                    justifyContent:
+                                      "space-between",
+                                    alignItems:
+                                      "center",
+                                  }}
+                                >
 
-                  {analysis
-                    .outliers && (
-                    <div
-                      style={{
-                        padding:
-                          "16px",
-                        borderRadius:
-                          "12px",
-                        background:
-                          "rgba(239,68,68,0.07)",
-                        border:
-                          "1px solid rgba(239,68,68,0.15)",
-                      }}
-                    >
+                                  <strong>
+                                    {column}
+                                  </strong>
 
-                      <div
-                        style={{
-                          fontSize:
-                            "12px",
-                          opacity:
-                            0.7,
-                          marginBottom:
-                            "10px",
-                        }}
-                      >
-                        OUTLIER CHECK
-                      </div>
+                                  <span>
+                                    {correlation.toFixed(
+                                      3
+                                    )}
+                                  </span>
 
-                      {Object.entries(
-                        analysis
-                          .outliers
-                      )
-                        .filter(
-                          ([, data]) =>
-                            Number(
-                              data?.count
-                            ) > 0
+                                </div>
+
+                                {/* BAR */}
+
+                                <div
+                                  style={{
+                                    height: "8px",
+                                    borderRadius:
+                                      "10px",
+                                    background:
+                                      "rgba(255,255,255,0.08)",
+                                    overflow:
+                                      "hidden",
+                                  }}
+                                >
+
+                                  <div
+                                    style={{
+                                      width: `${percentage}%`,
+                                      height:
+                                        "100%",
+                                      background:
+                                        correlation >=
+                                        0
+                                          ? "linear-gradient(90deg, #6366f1, #8b5cf6)"
+                                          : "linear-gradient(90deg, #ef4444, #f97316)",
+                                      borderRadius:
+                                        "10px",
+                                    }}
+                                  />
+
+                                </div>
+
+                                {/* DESCRIPTION */}
+
+                                <small
+                                  style={{
+                                    opacity: 0.7,
+                                  }}
+                                >
+                                  {correlation > 0
+                                    ? "Positive relationship"
+                                    : correlation < 0
+                                    ? "Negative relationship"
+                                    : "No linear relationship"}
+                                </small>
+
+                              </div>
+                            );
+                          }
                         )
-                        .map(
-                          ([
-                            column,
-                            data,
-                          ]) => (
-                            <div
-                              key={
-                                column
-                              }
-                              style={{
-                                display:
-                                  "flex",
-                                justifyContent:
-                                  "space-between",
-                                padding:
-                                  "7px 0",
-                              }}
-                            >
 
-                              <span>
-                                {
-                                  column
-                                }
-                              </span>
+                    ) : (
 
-                              <strong>
-                                {
-                                  data.count
-                                }{" "}
-                                (
-                                {
-                                  data.percentage
-                                }
-                                %)
-                              </strong>
+                      <p>
+                        Correlation data
+                        is not available.
+                      </p>
 
-                            </div>
-                          )
-                        )}
+                    )}
 
-                      {Object.values(
-                        analysis
-                          .outliers
-                      ).every(
-                        (data) =>
-                          Number(
-                            data?.count
-                          ) === 0
-                      ) && (
-                        <div>
-                          No outliers
-                          detected.
-                        </div>
-                      )}
-
-                    </div>
-                  )}
-
-                  {/* DATA VALIDATION */}
-
-                  {analysis
-                    .numeric_statistics && (
-                    <div
-                      style={{
-                        padding:
-                          "16px",
-                        borderRadius:
-                          "12px",
-                        background:
-                          "rgba(239,68,68,0.06)",
-                        border:
-                          "1px solid rgba(239,68,68,0.12)",
-                      }}
-                    >
-
-                      <div
-                        style={{
-                          fontSize:
-                            "12px",
-                          opacity:
-                            0.7,
-                          marginBottom:
-                            "10px",
-                        }}
-                      >
-                        DATA VALIDATION
-                      </div>
-
-                      {[
-                        "Income",
-                        "LoanAmount",
-                      ].map(
-                        (column) => {
-
-                          const stats =
-                            analysis
-                              .numeric_statistics
-                              ?.[column];
-
-                          if (
-                            !stats
-                          )
-                            return null;
-
-                          if (
-                            Number(
-                              stats.minimum
-                            ) >= 0
-                          )
-                            return null;
-
-                          return (
-                            <div
-                              key={
-                                column
-                              }
-                              style={{
-                                display:
-                                  "flex",
-                                justifyContent:
-                                  "space-between",
-                                padding:
-                                  "7px 0",
-                              }}
-                            >
-
-                              <span>
-                                ⚠️ Negative{" "}
-                                {
-                                  column
-                                }
-                              </span>
-
-                              <strong>
-                                Minimum:{" "}
-                                {
-                                  stats.minimum
-                                }
-                              </strong>
-
-                            </div>
-                          );
-                        }
-                      )}
-
-                    </div>
-                  )}
+                  </div>
 
                 </div>
 
-              </div>
-            </>
-          )}
-
-          {/* GET STARTED */}
-
-          {!analysis && (
-            <div className="recent-card">
-
-              <div className="card-header">
-
-                <div>
-
-                  <h3>
-                    Get Started
-                  </h3>
-
-                  <p>
-                    Upload a CSV
-                    dataset to begin
-                    analysis.
-                  </p>
-
-                </div>
-
-                <button
-                  className="view-button"
-                  onClick={
-                    openFilePicker
-                  }
-                >
-                  <Upload
-                    size={16}
-                  />
-                  Upload CSV
-                </button>
-
-              </div>
-
-            </div>
-          )}
-
-        </section>
-
-      </main>
-
-    </div>
-  );
-}
-
-export default App;
+                
 
 
 
