@@ -97,6 +97,8 @@ function formatAIInsights(text) {
 function App() {
   const [sidebarOpen, setSidebarOpen] =
     useState(true);
+  const [activePage, setActivePage] =
+  useState("dashboard");
 
   const [file, setFile] =
     useState(null);
@@ -903,13 +905,83 @@ function App() {
 
       {/* SIDEBAR */}
 
-      <aside
-        className={`sidebar ${
-          sidebarOpen
-            ? "open"
-            : "closed"
-        }`}
-      >
+      <nav className="sidebar-nav">
+
+  <button
+    className={`nav-item ${
+      activePage === "dashboard"
+        ? "active"
+        : ""
+    }`}
+    onClick={() =>
+      setActivePage("dashboard")
+    }
+  >
+    <Home size={19} />
+
+    {sidebarOpen && (
+      <span>Dashboard</span>
+    )}
+  </button>
+
+  <button
+    className={`nav-item ${
+      activePage === "documents"
+        ? "active"
+        : ""
+    }`}
+    onClick={() =>
+      setActivePage("documents")
+    }
+  >
+    <FileText size={19} />
+
+    {sidebarOpen && (
+      <span>Documents</span>
+    )}
+  </button>
+
+  <button
+    className={`nav-item ${
+      activePage === "analytics"
+        ? "active"
+        : ""
+    }`}
+    onClick={() =>
+      setActivePage("analytics")
+    }
+  >
+    <BarChart3 size={19} />
+
+    {sidebarOpen && (
+      <span>Analytics</span>
+    )}
+  </button>
+
+  <button
+    className={`nav-item ${
+      activePage === "insights"
+        ? "active"
+        : ""
+    }`}
+    onClick={() =>
+      setActivePage("insights")
+    }
+  >
+    <Lightbulb size={19} />
+
+    {sidebarOpen && (
+      <span>AI Insights</span>
+    )}
+  </button>
+
+</nav>
+        
+          
+            
+            
+        
+      
         <div className="logo">
 
           <div className="logo-icon">
